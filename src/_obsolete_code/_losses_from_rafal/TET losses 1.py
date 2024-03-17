@@ -10,18 +10,17 @@ To find TET from graph
 """"
 
 def figure_2_10(X_value, x=True):
+    """
+    x = true for t/o
+    """
+    fig_2_10 = pd.read_csv(r'_input_database\figure_2_10.csv')
+    t/o = fig_2_10['x'].values
+    y1 = fig_2_10['TET'.values]
 
-""""
-x = true for t/o
-""""
-fig_2_10 = pd.read_csv(r'_input_database\figure_2_10.csv')
-t/o = fig_2_10['x'].values
-y1 = fig_2_10['TET'.values]
-
-if x == True:
-    interp_func = interpld(t/o, y1, kind='cubic')
-    interpolated_y = interp_func(x_value)
-return interpolated_y
+    if x == True:
+        interp_func = interpld(t/o, y1, kind='cubic')
+        interpolated_y = interp_func(x_value)
+        return interpolated_y
 
 #After getting the TET Energy Coeff (delta_phi), we can calculate TET loss K_TE using:
 def calculate_K_TE(M_2, delta_phi_squared_TE, gamma_g):
@@ -32,14 +31,14 @@ def calculate_K_TE(M_2, delta_phi_squared_TE, gamma_g):
     K_TE = numerator / denominator
     return K_TE
 
-#beta2 and alpha3 values
-#B2 = 
-#a3 = 
+    #beta2 and alpha3 values
+    #B2 = 
+    #a3 = 
 
-# values for M_2, delta_phi_squared_TE, and gamma
-#M_2 = 
-#delta_phi_squared_TE = 
-#gamma_g = 
+    # values for M_2, delta_phi_squared_TE, and gamma
+    #M_2 = 
+    #delta_phi_squared_TE = 
+    #gamma_g = 
 
 if a3 != 0:
     # Calculate Δϕ^2 TE using the provided formula
