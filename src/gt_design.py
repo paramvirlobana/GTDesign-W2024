@@ -62,7 +62,7 @@ class aeroturbine():
         U = numpy.sqrt((2*c_p_gas*1000*(T_01 - T_03)) / (psi))    
         return U
     
-    def calc_stage_3(U, C_3, T_3, rho_3,reaction):
+    def calc_stage_3(U, C_3, T_3, rho_3,reaction,P_3):
         
         V_w_3 = c_p_gas*1000*(T_01-T_03)/(2*U) + reaction*U
         C_w_3 = V_w_3-U
@@ -74,8 +74,10 @@ class aeroturbine():
         a_3 = np.sqrt(gamma_g * R * 1000 * T_3)
         M_3_rel = V_3 / a_3
         A_3 = m_dot_3/(rho_3 * C_a_3)
+
+        P_03_rel = P_3*(1+ (gamma_g-1)/2 * M_3_rel**2)**(gamma_g/(gamma_g-1))
         
-        return C_a_3, C_w_3,  V_3, V_w_3, flow_coefficient_3, beta_3, a_3, M_3_rel, A_3, alpha_3
+        return C_a_3, C_w_3,  V_3, V_w_3, flow_coefficient_3, beta_3, a_3, M_3_rel, A_3, alpha_3,P_03_rel
     
     def calc_stage_2(U, reaction, T_1, T_3, P_3, A_3, V_w_3):
         T_2 = T_3 + reaction * (T_1 - T_3)
@@ -94,8 +96,10 @@ class aeroturbine():
         alpha_2 = np.rad2deg(np.arctan(C_w_2/C_a_2))
         M_2 = C_2 / a_2
         M_2_rel = V_2 / a_2
+        P_02 = P_2*(1+ (gamma_g-1)/2 * M_2**2)**(gamma_g/(gamma_g-1))
+        P_02_rel = P_2*(1+ (gamma_g-1)/2 * M_2_rel**2)**(gamma_g/(gamma_g-1))
 
-        return T_2, P_2, rho_2, A_2, C_a_2, flow_coefficient_2, a_2, V_w_2, beta_2, V_2, C_w_2, C_2, alpha_2, M_2, M_2_rel
+        return T_2, P_2, rho_2, A_2, C_a_2, flow_coefficient_2, a_2, V_w_2, beta_2, V_2, C_w_2, C_2, alpha_2, M_2, M_2_rel,P_02,P_02_rel
     
     def calc_hub_angles(r_m_pointer, r_hub_pointer, alpha_2_pointer, alpha_3_pointer, flow_coeff_2_pointer, flow_coeff_3_pointer, U_pointer, C_a_2, a_2):
         alpha_2_hub_rad = numpy.arctan((r_m_pointer/r_hub_pointer) *numpy.tan(numpy.deg2rad(alpha_2_pointer)))
