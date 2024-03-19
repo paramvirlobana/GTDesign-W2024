@@ -1,0 +1,138 @@
+
+%%% Preamble Requirements %%%
+% \usepackage{geometry}
+% \usepackage{amsfonts}
+% \usepackage{amsmath}
+% \usepackage{amssymb}
+% \usepackage{tikz}
+
+% Optional packages such as sfmath set through python interface
+% \usepackage{sfmath}
+
+% \usetikzlibrary{arrows,chains,positioning,scopes,shapes.geometric,shapes.misc,shadows}
+
+%%% End Preamble Requirements %%%
+
+\input{"D:/Programs/Anaconda/Lib/site-packages/pyxdsm/diagram_styles"}
+\begin{tikzpicture}
+
+\matrix[MatrixSetup]{
+%Row 0
+&
+&
+\node [DataIO] (output_solver) {$\begin{array}{c}\Lambda, \psi \\ \alpha_3, M_{exit}\end{array}$};&
+\node [DataIO] (output_meanline_design) {$\begin{array}{c}\text{Cycle Calculations} \\ T_{01}, T_{02}, T_{03} \\ P_{01}, P_{03}\end{array}$};&
+&
+&
+&
+&
+\\
+%Row 1
+\node [DataIO] (left_output_opt) {$\text{Optimized Design *}$};&
+\node [Optimization] (opt) {$\text{Optimizer}$};&
+&
+&
+&
+&
+&
+&
+\\
+%Row 2
+&
+&
+\node [MDA] (solver) {$\text{MDA}$};&
+&
+&
+&
+&
+&
+\\
+%Row 3
+&
+&
+\node [DataInter] (meanline_design-solver) {$\begin{array}{c}\phi_2, \phi_3, \beta_2, \alpha_2 \\ A_2, A_3, C_1, C_2, C_3\end{array}$};&
+\node [Function] (meanline_design) {$\begin{array}{c}\text{Analysis - 1} \\ \text{Meanline Design}\end{array}$};&
+\node [DataInter] (meanline_design-structural_design) {$A_2, U$};&
+\node [DataInter] (meanline_design-blade_vortex_analysis) {$\begin{array}{c}\phi_2, \phi_3, \alpha_2 \\ U, C_{a_2}\end{array}$};&
+&
+&
+\\
+%Row 4
+&
+&
+\node [DataInter] (structural_design-solver) {$\begin{array}{c}N, \omega, r_t \\ r_h, r_m, h\end{array}$};&
+&
+\node [Function] (structural_design) {$\begin{array}{c}\text{Analysis - 2} \\ \text{Structural Analysis}\end{array}$};&
+\node [DataInter] (structural_design-blade_vortex_analysis) {$r_t, r_h, r_m$};&
+&
+&
+\\
+%Row 5
+&
+&
+\node [DataInter] (blade_vortex_analysis-solver) {$\begin{array}{c}\alpha_{2h}, \alpha_{2t}, \beta_{2h}, \beta_{2t} \\ \alpha_{3h}, \alpha_{3t}, \beta_{3h}, \beta_{3t}\end{array}$};&
+&
+&
+\node [Function] (blade_vortex_analysis) {$\begin{array}{c}\text{Analysis - 3} \\ \text{Blade Vortex Analysis}\end{array}$};&
+&
+&
+\\
+%Row 6
+&
+&
+&
+&
+&
+&
+\node [Function] (off_design) {$\begin{array}{c}\text{Analysis - 4} \\ \text{Off Design}\end{array}$};&
+&
+\\
+%Row 7
+&
+\node [DataInter] (aerodynamic_losses-opt) {$\begin{array}{c}\eta_0 \\ \eta_{0_{off}}\end{array}$};&
+&
+&
+&
+&
+&
+\node [Function] (aerodynamic_losses) {$\begin{array}{c}\text{Analysis - 5} \\ \text{Aerodynamic Losses}\end{array}$};&
+\\
+%Row 8
+&
+&
+&
+&
+&
+&
+&
+&
+\\
+};
+
+% XDSM process chains
+
+
+\begin{pgfonlayer}{data}
+\path
+% Horizontal edges
+(aerodynamic_losses) edge [DataLine] (aerodynamic_losses-opt)
+(meanline_design) edge [DataLine] (meanline_design-structural_design)
+(structural_design) edge [DataLine] (structural_design-blade_vortex_analysis)
+(meanline_design) edge [DataLine] (meanline_design-blade_vortex_analysis)
+(meanline_design) edge [DataLine] (meanline_design-solver)
+(structural_design) edge [DataLine] (structural_design-solver)
+(blade_vortex_analysis) edge [DataLine] (blade_vortex_analysis-solver)
+(opt) edge [DataLine] (left_output_opt)
+% Vertical edges
+(aerodynamic_losses-opt) edge [DataLine] (opt)
+(meanline_design-structural_design) edge [DataLine] (structural_design)
+(structural_design-blade_vortex_analysis) edge [DataLine] (blade_vortex_analysis)
+(meanline_design-blade_vortex_analysis) edge [DataLine] (blade_vortex_analysis)
+(meanline_design-solver) edge [DataLine] (solver)
+(structural_design-solver) edge [DataLine] (solver)
+(blade_vortex_analysis-solver) edge [DataLine] (solver)
+(solver) edge [DataLine] (output_solver)
+(meanline_design) edge [DataLine] (output_meanline_design);
+\end{pgfonlayer}
+
+\end{tikzpicture}
