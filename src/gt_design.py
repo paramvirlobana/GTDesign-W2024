@@ -62,12 +62,13 @@ class aeroturbine():
         U = numpy.sqrt((2*c_p_gas*1000*(T_01 - T_03)) / (psi))    
         return U
     
-    def calc_stage_3(U, C_3, T_3, rho_3,reaction,P_3):
+    def calc_stage_3(U, C_3, T_3, rho_3,reaction,P_3,alpha_3):
         
-        V_w_3 = c_p_gas*1000*(T_01-T_03)/(2*U) + reaction*U
-        C_w_3 = V_w_3-U
-        alpha_3 = numpy.rad2deg(numpy.arcsin(C_w_3/C_3))
+        #V_w_3 = c_p_gas*1000*(T_01-T_03)/(2*U) + reaction*U
         C_a_3 = C_3 * np.cos(np.radians(alpha_3))
+        C_w_3 = math.sqrt(C_3**2 - C_a_3**2)
+        V_w_3 = U + C_w_3
+        alpha_3 = numpy.rad2deg(numpy.arcsin(C_w_3/C_3))
         V_3 = np.sqrt(V_w_3**2 + C_a_3**2)
         flow_coefficient_3 =  C_a_3 / U
         beta_3 = np.rad2deg(np.arctan(V_w_3 / C_a_3))
@@ -77,7 +78,7 @@ class aeroturbine():
 
         P_03_rel = P_3*(1+ (gamma_g-1)/2 * M_3_rel**2)**(gamma_g/(gamma_g-1))
         
-        return C_a_3, C_w_3,  V_3, V_w_3, flow_coefficient_3, beta_3, a_3, M_3_rel, A_3, alpha_3,P_03_rel
+        return C_a_3, C_w_3,  V_3, V_w_3, flow_coefficient_3, beta_3, a_3, M_3_rel, A_3,P_03_rel
     
     def calc_stage_2(U, reaction, T_1, T_3, P_3, A_3, V_w_3):
         T_2 = T_3 + reaction * (T_1 - T_3)
