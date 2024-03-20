@@ -406,7 +406,7 @@ class aerodynamic_losses():
 
 
 class off_design():
-    def calc_off_design(omega, r_mean, Ca_2, Cw_2, beta_2, alpha_3_rel_deg, A3):
+    def calc_off_design(omega, r_mean, Ca_2, Cw_2, beta_2, alpha_3_rel_deg, A3, Ca_3_normal):
     
         U_mean_OD = omega*0.9*r_mean
 
@@ -430,24 +430,25 @@ class off_design():
 
             Vw_3_OD = Ca_3 * numpy.tan(numpy.deg2rad(alpha_3_rel_deg))
 
-            C_w3 = Vw_3_OD - U_mean_OD
-            if C_w3 < 0:
+            C_w3_OD = Vw_3_OD - U_mean_OD
+            if C_w3_OD < 0:
                 continue
 
-            alpha_3 = numpy.arctan(C_w3/Ca_3)      
+            alpha_3 = numpy.arctan(C_w3_OD/Ca_3)      
             alpha_3_deg = (numpy.rad2deg(alpha_3))
             if(alpha_3_deg < 0):
                 continue
-            C3 = Ca_3/(numpy.cos(alpha_3))
-            T3 = T_03 - C3**2/(2*c_p_gas*1000)
-            P3 = P_03*(T3/T_03)**(gamma_g/(gamma_g-1))
-            rho3 = P3/(R*T3)
+            C3_od = Ca_3/(numpy.cos(alpha_3))
+            T3_od = T_03 - C3_od**2/(2*c_p_gas*1000)
+            P3_od = P_03*(T3_od/T_03)**(gamma_g/(gamma_g-1))
+            rho3 = P3_od/(R*T3_od)
             m_dot_OD = rho3*A3*Ca_3
             error = m_dot_3 - m_dot_OD
             iterations = iterations + 1
             flow_coeff_3_od = Ca_3/U_mean_OD
+            work_od = U_mean_OD*(C_w3_OD+Cw_2)
             
-            return rho3, T3, P3, alpha_3_deg, flow_coeff_2_OD, incidence_2, v_2, alpha_3_rel_OD, C_w3, Ca_3, U_mean_OD, flow_coeff_3_od
+            return rho3, T3_od, P3_od, alpha_3_deg, flow_coeff_2_OD, incidence_2, v_2, alpha_3_rel_OD, C_w3_OD, Ca_3, U_mean_OD, flow_coeff_3_od, work_od
 
 
 
