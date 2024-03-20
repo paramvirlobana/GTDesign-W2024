@@ -103,7 +103,7 @@ class aeroturbine():
 
         return T_02, T_2, P_2, rho_2, A_2, C_a_2, flow_coefficient_2, a_2, V_w_2, beta_2, V_2, C_w_2, C_2, alpha_2, M_2, M_2_rel,P_02,P_02_rel
     
-    def calc_hub_angles(r_m_pointer, r_hub_pointer, alpha_2_pointer, alpha_3_pointer, flow_coeff_2_pointer, flow_coeff_3_pointer, U_pointer, C_a_2, a_2):
+    def calc_hub_angles(r_m_pointer, r_hub_pointer, alpha_2_pointer, alpha_3_pointer, flow_coeff_2_pointer, flow_coeff_3_pointer, U_pointer, C_a_2, a_2,T_02, T_03,T_1,C_a_3):
         alpha_2_hub_rad = numpy.arctan((r_m_pointer/r_hub_pointer) *numpy.tan(numpy.deg2rad(alpha_2_pointer)))
         alpha_2_hub_deg = numpy.rad2deg(alpha_2_hub_rad)
     
@@ -120,11 +120,20 @@ class aeroturbine():
 
         V_2_hub = C_a_2/np.cos(beta_2_hub_rad)
         C_2_hub = C_a_2/np.cos(alpha_2_hub_rad)
+        C_3_hub = C_a_3/np.cos(alpha_3_hub_rad)
+        
+        T_2_hub = T_02 - (C_2_hub**2)/(2*c_p_gas*1000)
+        T_3_hub = T_03 - (C_3_hub**2)/(2*c_p_gas*1000)
+        T_1_hub = T_1 #assumed since no free vortexing
 
-        M_2_rel_hub = V_2_hub / a_2 #this is wrong probably 
-        M_2_hub = C_2_hub / a_2
+        a_2_hub = np.sqrt(gamma_g*T_2_hub*R*1000)
 
-        return alpha_2_hub_deg, alpha_3_hub_deg, beta_2_hub_deg, beta_3_hub_deg,  U_hub, V_2_hub, C_2_hub, M_2_rel_hub, M_2_hub
+        M_2_rel_hub = V_2_hub / a_2_hub 
+        M_2_hub = C_2_hub / a_2_hub
+
+        reaction_hub = (T_2_hub-T_3_hub)/(T_1_hub-T_3_hub)
+
+        return alpha_2_hub_deg, alpha_3_hub_deg, beta_2_hub_deg, beta_3_hub_deg,  U_hub, V_2_hub, C_2_hub, M_2_rel_hub, M_2_hub,reaction_hub
     
     
 
