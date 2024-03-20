@@ -99,8 +99,9 @@ class aeroturbine():
         M_2_rel = V_2 / a_2
         P_02 = P_2*(1+ (gamma_g-1)/2 * M_2**2)**(gamma_g/(gamma_g-1))
         P_02_rel = P_2*(1+ (gamma_g-1)/2 * M_2_rel**2)**(gamma_g/(gamma_g-1))
+        T_02 = T_2 + C_2**2/(2*1000*c_p_gas)
 
-        return T_2, P_2, rho_2, A_2, C_a_2, flow_coefficient_2, a_2, V_w_2, beta_2, V_2, C_w_2, C_2, alpha_2, M_2, M_2_rel,P_02,P_02_rel
+        return T_02, T_2, P_2, rho_2, A_2, C_a_2, flow_coefficient_2, a_2, V_w_2, beta_2, V_2, C_w_2, C_2, alpha_2, M_2, M_2_rel,P_02,P_02_rel
     
     def calc_hub_angles(r_m_pointer, r_hub_pointer, alpha_2_pointer, alpha_3_pointer, flow_coeff_2_pointer, flow_coeff_3_pointer, U_pointer, C_a_2, a_2):
         alpha_2_hub_rad = numpy.arctan((r_m_pointer/r_hub_pointer) *numpy.tan(numpy.deg2rad(alpha_2_pointer)))
@@ -120,7 +121,7 @@ class aeroturbine():
         V_2_hub = C_a_2/np.cos(beta_2_hub_rad)
         C_2_hub = C_a_2/np.cos(alpha_2_hub_rad)
 
-        M_2_rel_hub = V_2_hub / a_2
+        M_2_rel_hub = V_2_hub / a_2 #this is wrong probably 
         M_2_hub = C_2_hub / a_2
 
         return alpha_2_hub_deg, alpha_3_hub_deg, beta_2_hub_deg, beta_3_hub_deg,  U_hub, V_2_hub, C_2_hub, M_2_rel_hub, M_2_hub
@@ -155,6 +156,9 @@ class aeroturbine():
 
             reaction_hub = (c_a_3_pointer * numpy.tan(numpy.deg2rad(beta_3_hub)) - c_a_2_pointer*numpy.tan(numpy.deg2rad(beta_2_hub)))/(2*U_hub)
             reaction_tip = (c_a_3_pointer * numpy.tan(numpy.deg2rad(beta_3_tip)) - c_a_2_pointer*numpy.tan(numpy.deg2rad(beta_2_tip)))/(2*U_tip)
+
+
+
 
             return reaction_hub, reaction_tip
     
@@ -406,49 +410,57 @@ class aerodynamic_losses():
 
 
 class off_design():
-    def calc_off_design(omega, r_mean, Ca_2, Cw_2, beta_2, alpha_3_rel_deg, A3, Ca_3_normal):
-    
-        U_mean_OD = omega*0.9*r_mean
+    def calc_off_design(A_3, U_mean,beta_3,Ca_2, Cw_2,beta_2 ):
+        U_mean_od = U_mean *0.9
+        C_w_2_od = Cw_2
+        flow_coeff_2_od = Ca_2/U_mean_od
+        V_w_2_od = Cw_2 - U_mean_od
+        alpha_2_rel_od = np.arctan(V_w_2_od/Ca_2)
+        alpha_2_rel_od_deg = np.rad2deg(alpha_2_rel_od)
+        incidence_2 = alpha_2_rel_od_deg - beta_2 #beta_2 is the blade angle -> alpha_2_rel from previous calculations
+        v_2_od = np.sqrt(V_w_2_od**2 + Ca_2**2) #relative velocity on the hypoteneuse (total relative velocity at 2)
 
-        flow_coeff_2_OD = Ca_2/U_mean_OD
-        Vw2_OD = Cw_2 - U_mean_OD
-        alpha_2_rel_OD = numpy.arctan(Vw2_OD/Ca_2)
-        alpha_2_rel_OD_deg = numpy.rad2deg(alpha_2_rel_OD)
-        incidence_2 = alpha_2_rel_OD_deg - beta_2 #beta_2 is the blade angle -> alpha_2_rel from previous calculations
-        v_2 = numpy.sqrt(Vw2_OD**2 + Ca_2**2) #relative velocity on the hypoteneuse (total relative velocity at 2)
-        alpha_3_rel_OD = alpha_3_rel_deg #given in the FAQ
-        increment = 0.1
-        Ca_3 = 10 - increment #starting point, it should be equal or greater
-        error = 1
-        error_threshold = 0.01
-    
-        iterations = 0
-        max_iterations = 10000
-    
-        while error > numpy.abs(error_threshold) and iterations < max_iterations and Ca_3 < 300:
-            Ca_3 = Ca_3 + increment
 
-            Vw_3_OD = Ca_3 * numpy.tan(numpy.deg2rad(alpha_3_rel_deg))
+        LHS = R*m_dot_3/A_3
+        error_threshold = LHS * 0.01 #1 percent error of the LHS
 
-            C_w3_OD = Vw_3_OD - U_mean_OD
-            if C_w3_OD < 0:
-                continue
+        Ca_3_range = np.linspace(100,400,1000)
+        Ca_3_od = 0
 
-            alpha_3 = numpy.arctan(C_w3_OD/Ca_3)      
-            alpha_3_deg = (numpy.rad2deg(alpha_3))
-            if(alpha_3_deg < 0):
-                continue
-            C3_od = Ca_3/(numpy.cos(alpha_3))
-            T3_od = T_03 - C3_od**2/(2*c_p_gas*1000)
-            P3_od = P_03*(T3_od/T_03)**(gamma_g/(gamma_g-1))
-            rho3 = P3_od/(R*T3_od)
-            m_dot_OD = rho3*A3*Ca_3
-            error = m_dot_3 - m_dot_OD
-            iterations = iterations + 1
-            flow_coeff_3_od = Ca_3/U_mean_OD
-            work_od = U_mean_OD*(C_w3_OD+Cw_2)
-            
-            return rho3, T3_od, P3_od, alpha_3_deg, flow_coeff_2_OD, incidence_2, v_2, alpha_3_rel_OD, C_w3_OD, Ca_3, U_mean_OD, flow_coeff_3_od, work_od
+        for i in Ca_3_range:
+            V_w_3_od = i * np.tan(np.deg2rad(beta_3))
+            C_w_3_od = V_w_3_od - U_mean_od
+            C_3_od = np.sqrt(i**2 + C_w_3_od**2)
+            T_3_od = T_03 - (C_3_od**2)/(2*1000*c_p_gas)
+            P_3_od = P_03 * (T_3_od/T_03)**(gamma_g/(gamma_g-1))
+            RHS = i *P_3_od/T_3_od
+            if np.abs(LHS - RHS) < error_threshold:
+                Ca_3_od = i
+                alpha_3_od = np.rad2deg(np.arctan(C_w_3_od/Ca_3_od))
+                rho_3_od = P_3_od/(R*T_3_od)
+                work_od_cw = U_mean_od*(C_w_3_od + C_w_2_od)
+                work_od_vw = U_mean_od*(V_w_3_od + V_w_2_od)
+                flow_coeff_3_od = Ca_3_od/U_mean_od
+                break
+
+        if Ca_3_od == 0: #if nothing happens, return everything as zero
+            V_w_3_od =0
+            C_w_3_od = 0
+            C_3_od = 0
+            T_3_od = 0
+            P_3_od = 0
+            Ca_3_od = 0
+            alpha_3_od = 0
+            rho_3_od = 0
+            work_od_cw = 0
+            work_od_vw = 0
+            flow_coeff_3_od = 0
+
+            return T_3_od, rho_3_od, P_3_od, alpha_3_od, flow_coeff_2_od, incidence_2, v_2_od, alpha_3_od,C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw
+                
+        else:
+
+            return T_3_od, rho_3_od, P_3_od, alpha_3_od, flow_coeff_2_od, incidence_2, v_2_od, alpha_3_od,C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw
 
 
 
