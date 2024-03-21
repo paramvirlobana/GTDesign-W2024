@@ -33,14 +33,16 @@ T_03 = 1053.051
 P_03 = 524.594
 m_dot_3 = m_dot_2 + m_cool_disc_hpt
 
+
 # BLADE PARAMETERS
 # VANE
 AR_vane = 0.5
 TE_vane = 1.27/1000     # minimum trailing edge thickness in [m]
+
 # BLADE
 AR_rotor = 1.3
 TE_rotor = 0.762/1000   # minimum trailing edge thickness in [m]
-tip_clearance = 0.01    # minimum tip clearance span -> maximum is 0.02
+tip_clearance = 2.0    # minimum tip clearance span -> maximum is 0.02
 
 class aeroturbine():
 
@@ -61,19 +63,23 @@ class aeroturbine():
         U = numpy.sqrt((2*c_p_gas*1000*(T_01 - T_03)) / (psi))    
         return U
     
-    def calc_stage_3(U, alpha_3, C_3, T_3, rho_3):
-    
+    def calc_stage_3(U, C_3, T_3, rho_3,reaction,P_3,alpha_3):
+        
+        #V_w_3 = c_p_gas*1000*(T_01-T_03)/(2*U) + reaction*U
         C_a_3 = C_3 * np.cos(np.radians(alpha_3))
-        C_w_3 = np.sqrt(C_3**2 - C_a_3**2)
+        C_w_3 = math.sqrt(C_3**2 - C_a_3**2)
         V_w_3 = U + C_w_3
+        alpha_3 = numpy.rad2deg(numpy.arcsin(C_w_3/C_3))
         V_3 = np.sqrt(V_w_3**2 + C_a_3**2)
         flow_coefficient_3 =  C_a_3 / U
         beta_3 = np.rad2deg(np.arctan(V_w_3 / C_a_3))
         a_3 = np.sqrt(gamma_g * R * 1000 * T_3)
         M_3_rel = V_3 / a_3
         A_3 = m_dot_3/(rho_3 * C_a_3)
+
+        P_03_rel = P_3*(1+ (gamma_g-1)/2 * M_3_rel**2)**(gamma_g/(gamma_g-1))
         
-        return C_a_3, C_w_3,  V_3, V_w_3, flow_coefficient_3, beta_3, a_3, M_3_rel, A_3
+        return C_a_3, C_w_3,  V_3, V_w_3, flow_coefficient_3, beta_3, a_3, M_3_rel, A_3,P_03_rel
     
     def calc_stage_2(U, reaction, T_1, T_3, P_3, A_3, V_w_3):
         T_2 = T_3 + reaction * (T_1 - T_3)
@@ -92,10 +98,13 @@ class aeroturbine():
         alpha_2 = np.rad2deg(np.arctan(C_w_2/C_a_2))
         M_2 = C_2 / a_2
         M_2_rel = V_2 / a_2
+        P_02 = P_2*(1+ (gamma_g-1)/2 * M_2**2)**(gamma_g/(gamma_g-1))
+        P_02_rel = P_2*(1+ (gamma_g-1)/2 * M_2_rel**2)**(gamma_g/(gamma_g-1))
+        T_02 = T_2 + C_2**2/(2*1000*c_p_gas)
 
-        return T_2, P_2, rho_2, A_2, C_a_2, flow_coefficient_2, a_2, V_w_2, beta_2, V_2, C_w_2, C_2, alpha_2, M_2, M_2_rel
+        return T_02, T_2, P_2, rho_2, A_2, C_a_2, flow_coefficient_2, a_2, V_w_2, beta_2, V_2, C_w_2, C_2, alpha_2, M_2, M_2_rel,P_02,P_02_rel
     
-    def calc_hub_angles(r_m_pointer, r_hub_pointer, alpha_2_pointer, alpha_3_pointer, flow_coeff_2_pointer, flow_coeff_3_pointer, U_pointer, C_a_2, a_2):
+    def calc_hub_angles(r_m_pointer, r_hub_pointer, alpha_2_pointer, alpha_3_pointer, flow_coeff_2_pointer, flow_coeff_3_pointer, U_pointer, C_a_2, a_2,T_02, T_03,T_1,C_a_3):
         alpha_2_hub_rad = numpy.arctan((r_m_pointer/r_hub_pointer) *numpy.tan(numpy.deg2rad(alpha_2_pointer)))
         alpha_2_hub_deg = numpy.rad2deg(alpha_2_hub_rad)
     
@@ -112,44 +121,56 @@ class aeroturbine():
 
         V_2_hub = C_a_2/np.cos(beta_2_hub_rad)
         C_2_hub = C_a_2/np.cos(alpha_2_hub_rad)
+        C_3_hub = C_a_3/np.cos(alpha_3_hub_rad)
+        
+        T_2_hub = T_02 - (C_2_hub**2)/(2*c_p_gas*1000)
+        T_3_hub = T_03 - (C_3_hub**2)/(2*c_p_gas*1000)
+        T_1_hub = T_1 #assumed since no free vortexing
 
-        M_2_rel_hub = V_2_hub / a_2
-        M_2_hub = C_2_hub / a_2
+        a_2_hub = np.sqrt(gamma_g*T_2_hub*R*1000)
 
-        return alpha_2_hub_deg, alpha_3_hub_deg, beta_2_hub_deg, beta_3_hub_deg,  U_hub, V_2_hub, C_2_hub, M_2_rel_hub, M_2_hub
+        M_2_rel_hub = V_2_hub / a_2_hub 
+        M_2_hub = C_2_hub / a_2_hub
+
+        reaction_hub = (T_2_hub-T_3_hub)/(T_1_hub-T_3_hub)
+
+        return alpha_2_hub_deg, alpha_3_hub_deg, beta_2_hub_deg, beta_3_hub_deg,  U_hub, V_2_hub, C_2_hub, M_2_rel_hub, M_2_hub,reaction_hub
     
     
 
     def calc_tip_angles(r_m_pointer, r_tip_pointer, alpha_2_pointer, alpha_3_pointer, flow_coeff_2_pointer, flow_coeff_3_pointer, U_pointer, C_a_2, a_2):
-            alpha_2_tip_rad = numpy.arctan((r_m_pointer/r_tip_pointer) *numpy.tan(numpy.deg2rad(alpha_2_pointer)))
-            alpha_2_tip_deg = numpy.rad2deg(alpha_2_tip_rad)
-        
-            alpha_3_tip_rad = numpy.arctan((r_m_pointer/r_tip_pointer) *numpy.tan(numpy.deg2rad(alpha_3_pointer)))
-            alpha_3_tip_deg = numpy.rad2deg(alpha_3_tip_rad)
-        
-            beta_2_tip_rad = numpy.arctan((r_m_pointer/r_tip_pointer) *numpy.tan(numpy.deg2rad(alpha_2_pointer)) - (r_tip_pointer/r_m_pointer)*(flow_coeff_2_pointer)**(-1))
-            beta_2_tip_deg = numpy.rad2deg(beta_2_tip_rad)
-        
-            beta_3_tip_rad = numpy.arctan((r_m_pointer/r_tip_pointer) *numpy.tan(numpy.deg2rad(alpha_3_pointer)) + (r_tip_pointer/r_m_pointer)*(flow_coeff_3_pointer)**(-1))
-            beta_3_tip_deg = numpy.rad2deg(beta_3_tip_rad)    
+        alpha_2_tip_rad = numpy.arctan((r_m_pointer/r_tip_pointer) *numpy.tan(numpy.deg2rad(alpha_2_pointer)))
+        alpha_2_tip_deg = numpy.rad2deg(alpha_2_tip_rad)
+    
+        alpha_3_tip_rad = numpy.arctan((r_m_pointer/r_tip_pointer) *numpy.tan(numpy.deg2rad(alpha_3_pointer)))
+        alpha_3_tip_deg = numpy.rad2deg(alpha_3_tip_rad)
+    
+        beta_2_tip_rad = numpy.arctan((r_m_pointer/r_tip_pointer) *numpy.tan(numpy.deg2rad(alpha_2_pointer)) - (r_tip_pointer/r_m_pointer)*(flow_coeff_2_pointer)**(-1))
+        beta_2_tip_deg = numpy.rad2deg(beta_2_tip_rad)
+    
+        beta_3_tip_rad = numpy.arctan((r_m_pointer/r_tip_pointer) *numpy.tan(numpy.deg2rad(alpha_3_pointer)) + (r_tip_pointer/r_m_pointer)*(flow_coeff_3_pointer)**(-1))
+        beta_3_tip_deg = numpy.rad2deg(beta_3_tip_rad)    
 
-            U_tip = U_pointer * (r_tip_pointer / r_m_pointer)
-            V_2_tip = C_a_2/np.cos(beta_2_tip_rad)
-            C_2_tip = C_a_2/np.cos(alpha_2_tip_rad)
+        U_tip = U_pointer * (r_tip_pointer / r_m_pointer)
+        V_2_tip = C_a_2/np.cos(beta_2_tip_rad)
+        C_2_tip = C_a_2/np.cos(alpha_2_tip_rad)
 
-            M_2_rel_tip = V_2_tip / a_2
-            M_2_tip = C_2_tip / a_2
+        M_2_rel_tip = V_2_tip / a_2
+        M_2_tip = C_2_tip / a_2
 
 
-            return alpha_2_tip_deg, alpha_3_tip_deg, beta_2_tip_deg, beta_3_tip_deg, U_tip, V_2_tip, C_2_tip, M_2_rel_tip, M_2_tip
+        return alpha_2_tip_deg, alpha_3_tip_deg, beta_2_tip_deg, beta_3_tip_deg, U_tip, V_2_tip, C_2_tip, M_2_rel_tip, M_2_tip
     
 
     def calc_tip_hub_reaction(c_a_3_pointer, c_a_2_pointer ,beta_2_hub, beta_2_tip, beta_3_hub, beta_3_tip, U_hub, U_tip):
 
-            reaction_hub = (c_a_3_pointer * numpy.tan(numpy.deg2rad(beta_3_hub)) - c_a_2_pointer*numpy.tan(numpy.deg2rad(beta_2_hub)))/(2*U_hub)
-            reaction_tip = (c_a_3_pointer * numpy.tan(numpy.deg2rad(beta_3_tip)) - c_a_2_pointer*numpy.tan(numpy.deg2rad(beta_2_tip)))/(2*U_tip)
+        reaction_hub = (c_a_3_pointer * numpy.tan(numpy.deg2rad(beta_3_hub)) - c_a_2_pointer*numpy.tan(numpy.deg2rad(beta_2_hub)))/(2*U_hub)
+        reaction_tip = (c_a_3_pointer * numpy.tan(numpy.deg2rad(beta_3_tip)) - c_a_2_pointer*numpy.tan(numpy.deg2rad(beta_2_tip)))/(2*U_tip)
 
-            return reaction_hub, reaction_tip
+
+
+
+        return reaction_hub, reaction_tip
     
 
 class aerostructural():
@@ -345,7 +366,7 @@ class aerodynamic_losses():
 
             return K_s
         
-    class trailing_edge_losses():
+    class trailing_edge_losses_rotor():
 
         def figure_2_10(x_value, beta_in, beta_out):
             """
@@ -370,8 +391,18 @@ class aerodynamic_losses():
             f = f_zero + (abs(beta_in / beta_out) * (beta_in / beta_out))*(f_alpha - f_zero)
 
             return f
+        
 
-        def K_TET(o, M_2, beta_in, beta_out):
+        def required_vals(h, stagger_angle, r_meanline, pitch_axial_chord_ratio,beta_3):
+            c_true = (h)/AR_rotor
+            c_a = (h * np.cos(np.radians(stagger_angle)))/AR_rotor
+            N = math.floor((2 * np.pi * r_meanline) /(pitch_axial_chord_ratio * c_a))
+            o = (pitch_axial_chord_ratio * c_a) * np.sin(np.radians(beta_3))
+
+            return c_true, c_a, N, o
+            
+
+        def K_TET(M_2, beta_in, beta_out, h, stagger_angle, r_meanline, pitch_axial_chord_ratio):
             """
             M_2 -> Use relative M_2_rel for the rotor.
             FOR STATOR
@@ -381,8 +412,11 @@ class aerodynamic_losses():
             beta_in -> beta_2
             beta_out -> beta_3
             """
+            c_true, c_a, N, o = aerodynamic_losses.trailing_edge_losses_rotor.required_vals(h, stagger_angle, r_meanline, pitch_axial_chord_ratio,beta_out)
+
+
             r_to_o = TE_rotor/o
-            f = aerodynamic_losses.trailing_edge_losses.figure_2_10(r_to_o ,beta_in, beta_out)
+            f = aerodynamic_losses.trailing_edge_losses_rotor.figure_2_10(r_to_o ,beta_in, beta_out)
             
             term1 = ((gamma_g - 1) / 2) * M_2**2
             term2 = (1 / (1 - f)) - 1
@@ -390,57 +424,150 @@ class aerodynamic_losses():
             denominator = 1 - ((1 + term1))**(-gamma_g / (gamma_g - 1))
             K_TE = numerator / denominator
             
-            return K_TE, r_to_o, f
+            return K_TE
+        
+    class trailing_edge_losses_stator():
+
+        def figure_2_10(x_value, beta_in, beta_out):
+            """
+            f -> delta_phi_squared_TE
+            FOR STATOR
+            beta_in -> alpha_1
+            beta_out -> alpha_2
+            FOR ROTOR
+            beta_in -> beta_2
+            beta_out -> beta_3
+            """
+            fig_2_10 = pd.read_csv(r'_input_database\figure_2_10.csv')
+            r_te_o = fig_2_10['r_te_o'].values
+            impulse_blading = fig_2_10['impulse_blading'].values
+            stator_vanes = fig_2_10['stator_vanes'].values
+
+            interp_func_1 = interp1d(r_te_o, impulse_blading, kind='cubic')
+            interp_func_2 = interp1d(r_te_o, stator_vanes, kind='cubic')
+            f_alpha  = interp_func_1(x_value)
+            f_zero = interp_func_2(x_value)
+
+            f = f_zero + (abs(beta_in / beta_out) * (beta_in / beta_out))*(f_alpha - f_zero)
+
+            return f
+        
+
+        def required_vals(h, stagger_angle, r_meanline, pitch_axial_chord_ratio, beta_3):
+            c_true = (h)/AR_vane
+            c_a = (h * np.cos(np.radians(stagger_angle)))/AR_rotor
+            N = math.floor((2 * np.pi * r_meanline) /(pitch_axial_chord_ratio * c_a))
+            o = (pitch_axial_chord_ratio * c_a) * np.sin(np.radians(beta_3))
+
+            return c_true, c_a, N, o
+            
+
+        def K_TET(M_2, beta_in, beta_out, h, stagger_angle, r_meanline, pitch_axial_chord_ratio):
+            """
+            M_2 -> Use relative M_2_rel for the rotor.
+            FOR STATOR
+            beta_in -> alpha_1
+            beta_out -> alpha_2
+            FOR ROTOR
+            beta_in -> beta_2
+            beta_out -> beta_3
+            """
+            c_true, c_a, N, o = aerodynamic_losses.trailing_edge_losses_stator.required_vals(h, stagger_angle, r_meanline, pitch_axial_chord_ratio,beta_out)
+
+
+            r_to_o = TE_vane/o
+            f = aerodynamic_losses.trailing_edge_losses_stator.figure_2_10(r_to_o ,beta_in, beta_out)
+            
+            term1 = ((gamma_g - 1) / 2) * M_2**2
+            term2 = (1 / (1 - f)) - 1
+            numerator = ((1 - term1 * (term2))**(-gamma_g / (gamma_g - 1)) )- 1
+            denominator = 1 - ((1 + term1))**(-gamma_g / (gamma_g - 1))
+            K_TE = numerator / denominator
+            
+            return K_TE
         
     class clearance_losses():
 
+        def figure_2_21(x_value):
+
+            fig_2_21 = pd.read_csv(r'_input_database\figure_2_21.csv')
+            x = fig_2_21['tip_clearance_span_percent'].values
+            y = fig_2_21['efficiency_drop'].values
+
+            interp_func = interp1d(x, y, kind='cubic')
+            interpolated_y = interp_func(x_value)
+            
+            return interpolated_y
+
         def K_clr(h):
+
             pass
+    
+    def efficiency_calculations(K_stator, K_rotor, M_2, M_3_rel, C_2, V_3):
+        zeta_N = K_stator/(1 + 0.5 * gamma_g * M_2**2)
+        zeta_R = K_rotor/(1 + 0.5 * gamma_g * M_3_rel**2)
+        eta_tt = 1 / (1 + ((zeta_N * C_2**2 + zeta_R * V_3**2) / (2 * c_p_gas * 1000 * (T_01 - T_03))))
+        eta_tt = eta_tt * 100
+        return eta_tt
+
+    def efficiency_final(eta_tt, h, beta_3, r_tip, r_meanline):
+        delta_n = 0.93 * (eta_tt/100) * ((tip_clearance/100)/(h * np.cos(np.radians(beta_3)))) * (r_tip/r_meanline)
+        eta_final = eta_tt - delta_n
+        return delta_n, eta_final
 
 
 class off_design():
-    def calc_off_design(omega, r_mean, Ca_2, Cw_2, beta_2, alpha_3_rel_deg, A3):
-    
-        U_mean_OD = omega*0.9*r_mean
+    def calc_off_design(A_3, U_mean,beta_3,Ca_2, Cw_2,beta_2 ):
+        U_mean_od = U_mean *0.9
+        C_w_2_od = Cw_2
+        flow_coeff_2_od = Ca_2/U_mean_od
+        V_w_2_od = Cw_2 - U_mean_od
+        alpha_2_rel_od = np.arctan(V_w_2_od/Ca_2)
+        alpha_2_rel_od_deg = np.rad2deg(alpha_2_rel_od)
+        incidence_2 = alpha_2_rel_od_deg - beta_2 #beta_2 is the blade angle -> alpha_2_rel from previous calculations
+        v_2_od = np.sqrt(V_w_2_od**2 + Ca_2**2) #relative velocity on the hypoteneuse (total relative velocity at 2)
 
-        flow_coeff_2_OD = Ca_2/U_mean_OD
-        Vw2_OD = Cw_2 - U_mean_OD
-        alpha_2_rel_OD = numpy.arctan(Vw2_OD/Ca_2)
-        alpha_2_rel_OD_deg = numpy.rad2deg(alpha_2_rel_OD)
-        incidence_2 = alpha_2_rel_OD_deg - beta_2 #beta_2 is the blade angle -> alpha_2_rel from previous calculations
-        v_2 = numpy.sqrt(Vw2_OD**2 + Ca_2**2) #relative velocity on the hypoteneuse (total relative velocity at 2)
-        alpha_3_rel_OD = alpha_3_rel_deg #given in the FAQ
-        increment = 0.1
-        Ca_3 = 10 - increment #starting point, it should be equal or greater
-        error = 1
-        error_threshold = 0.01
-    
-        iterations = 0
-        max_iterations = 10000
-    
-        while error > numpy.abs(error_threshold) and iterations < max_iterations and Ca_3 < 300:
-            Ca_3 = Ca_3 + increment
 
-            Vw_3_OD = Ca_3 * numpy.tan(numpy.deg2rad(alpha_3_rel_deg))
+        LHS = R*m_dot_3/A_3
+        error_threshold = LHS * 0.01 #1 percent error of the LHS
 
-            C_w3 = Vw_3_OD - U_mean_OD
-            if C_w3 < 0:
-                continue
+        Ca_3_range = np.linspace(100,400,1000)
+        Ca_3_od = 0
 
-            alpha_3 = numpy.arctan(C_w3/Ca_3)      
-            alpha_3_deg = (numpy.rad2deg(alpha_3))
-            if(alpha_3_deg < 0):
-                continue
-            C3 = Ca_3/(numpy.cos(alpha_3))
-            T3 = T_03 - C3**2/(2*c_p_gas*1000)
-            P3 = P_03*(T3/T_03)**(gamma_g/(gamma_g-1))
-            rho3 = P3/(R*T3)
-            m_dot_OD = rho3*A3*Ca_3
-            error = m_dot_3 - m_dot_OD
-            iterations = iterations + 1
-            flow_coeff_3_od = Ca_3/U_mean_OD
-            
-            return rho3, T3, P3, alpha_3_deg, flow_coeff_2_OD, incidence_2, v_2, alpha_3_rel_OD, C_w3, Ca_3, U_mean_OD, flow_coeff_3_od
+        for i in Ca_3_range:
+            V_w_3_od = i * np.tan(np.deg2rad(beta_3))
+            C_w_3_od = V_w_3_od - U_mean_od
+            C_3_od = np.sqrt(i**2 + C_w_3_od**2)
+            T_3_od = T_03 - (C_3_od**2)/(2*1000*c_p_gas)
+            P_3_od = P_03 * (T_3_od/T_03)**(gamma_g/(gamma_g-1))
+            RHS = i *P_3_od/T_3_od
+            if np.abs(LHS - RHS) < error_threshold:
+                Ca_3_od = i
+                alpha_3_od = np.rad2deg(np.arctan(C_w_3_od/Ca_3_od))
+                rho_3_od = P_3_od/(R*T_3_od)
+                work_od_cw = U_mean_od*(C_w_3_od + C_w_2_od)
+                work_od_vw = U_mean_od*(V_w_3_od + V_w_2_od)
+                flow_coeff_3_od = Ca_3_od/U_mean_od
+                break
+
+        if Ca_3_od == 0: #if nothing happens, return everything as zero
+            V_w_3_od =0
+            C_w_3_od = 0
+            C_3_od = 0
+            T_3_od = 0
+            P_3_od = 0
+            Ca_3_od = 0
+            alpha_3_od = 0
+            rho_3_od = 0
+            work_od_cw = 0
+            work_od_vw = 0
+            flow_coeff_3_od = 0
+
+            return T_3_od, rho_3_od, P_3_od, alpha_3_od, flow_coeff_2_od, incidence_2, v_2_od, alpha_3_od,C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw
+                
+        else:
+
+            return T_3_od, rho_3_od, P_3_od, alpha_3_od, flow_coeff_2_od, incidence_2, v_2_od, alpha_3_od,C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw
 
 
 
