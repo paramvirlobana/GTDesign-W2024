@@ -499,9 +499,8 @@ class aerodynamic_losses():
         eta_final = eta_tt - delta_n
         return delta_n, eta_final
     
-    def losses_off_design(K_p_rotor, K_s_rotor, K_stator, K_1_rotor, K_2_rotor, pitch_chord_ratio_rotor, pitch_axial_chord_ratio_rotor, c_true, alpha_2, beta_2, beta_3, incidence,  M_2_rel_od, M_3_rel_od, h, stagger_angle_rotor, r_meanline, r_tip, C_2, V_3):
+    def losses_off_design(K_p_rotor, K_s_rotor, K_stator, K_1_rotor, K_2_rotor, pitch_chord_ratio_rotor, pitch_axial_chord_ratio_rotor, c_true, beta_2, beta_3, incidence,  M_2_rel_od, M_3_rel_od, h, stagger_angle_rotor, r_meanline, r_tip, C_2, V_3):
         # Primary
-        incidence = -1 * incidence
         phi_squared_P0 = 1 / (1 + ((K_p_rotor) / (K_1_rotor + K_2_rotor * K_p_rotor)))
         s = pitch_chord_ratio_rotor * c_true
         d_s = LE_diameter_rotor/s 
@@ -524,7 +523,7 @@ class aerodynamic_losses():
 
         # Secondary
         d_c = LE_diameter_rotor/c_true
-        graph_x_2 = (d_c)**(-0.3) * (np.cos(np.radians(beta_2)) / np.cos(np.radians(beta_3)))**(-1.5) * ((np.radians(alpha_2) - np.radians(beta_2))/(np.radians(beta_2) + np.radians(beta_3)))
+        graph_x_2 = (d_c)**(-0.3) * (np.cos(np.radians(beta_2)) / np.cos(np.radians(beta_3)))**(-1.5) * ((np.radians(beta_2 - incidence) - np.radians(beta_2))/(np.radians(beta_2) + np.radians(beta_3)))
         if graph_x_2 < 0.27:
             def figure_2_35(graph_x_2):
                 fig_2_35 = pd.read_csv(r'_input_database\figure_2_35.csv')
