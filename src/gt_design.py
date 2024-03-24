@@ -7,8 +7,6 @@ from scipy.interpolate import interp1d
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 
-
-
 mechanical_eff = 0.99
 gamma_air = 1.4
 gamma_g = 1.33333
@@ -38,11 +36,13 @@ m_dot_3 = m_dot_2 + m_cool_disc_hpt
 # VANE
 AR_vane = 0.5
 TE_vane = 1.27/1000     # minimum trailing edge thickness in [m]
+LE_diameter_vane = 0.000508
 
 # BLADE
 AR_rotor = 1.3
 TE_rotor = 0.762/1000   # minimum trailing edge thickness in [m]
 tip_clearance = 2.0    # minimum tip clearance span -> maximum is 0.02
+LE_diameter_rotor = 0.00508             #0.000254*12
 
 class aeroturbine():
 
@@ -337,7 +337,7 @@ class aerodynamic_losses():
             #  ================ K_p ================
             K_p = 0.914 * ((2/3) * K_p_star * K_accel + K_sh)
 
-            return K_p, pitch_chord_ratio, K_accel, stagger_angle,  pitch_chord_ratio
+            return K_p, pitch_chord_ratio, K_accel, stagger_angle,  pitch_chord_ratio, pitch_axial_chord_ratio, K_1, K_2
         
     class secondary_losses():
 
@@ -393,7 +393,7 @@ class aerodynamic_losses():
             return f
         
 
-        def required_vals(h, stagger_angle, r_meanline, pitch_axial_chord_ratio,beta_3):
+        def required_vals(h, stagger_angle, r_meanline, pitch_axial_chord_ratio, beta_3):
             c_true = (h)/AR_rotor
             c_a = (h * np.cos(np.radians(stagger_angle)))/AR_rotor
             N = math.floor((2 * np.pi * r_meanline) /(pitch_axial_chord_ratio * c_a))
@@ -424,7 +424,7 @@ class aerodynamic_losses():
             denominator = 1 - ((1 + term1))**(-gamma_g / (gamma_g - 1))
             K_TE = numerator / denominator
             
-            return K_TE
+            return K_TE, N, c_true, c_a
         
     class trailing_edge_losses_stator():
 
@@ -484,24 +484,8 @@ class aerodynamic_losses():
             denominator = 1 - ((1 + term1))**(-gamma_g / (gamma_g - 1))
             K_TE = numerator / denominator
             
-            return K_TE
-        
-    class clearance_losses():
+            return K_TE, N, c_true, c_a
 
-        def figure_2_21(x_value):
-
-            fig_2_21 = pd.read_csv(r'_input_database\figure_2_21.csv')
-            x = fig_2_21['tip_clearance_span_percent'].values
-            y = fig_2_21['efficiency_drop'].values
-
-            interp_func = interp1d(x, y, kind='cubic')
-            interpolated_y = interp_func(x_value)
-            
-            return interpolated_y
-
-        def K_clr(h):
-
-            pass
     
     def efficiency_calculations(K_stator, K_rotor, M_2, M_3_rel, C_2, V_3):
         zeta_N = K_stator/(1 + 0.5 * gamma_g * M_2**2)
@@ -514,10 +498,64 @@ class aerodynamic_losses():
         delta_n = 0.93 * (eta_tt/100) * ((tip_clearance/100)/(h * np.cos(np.radians(beta_3)))) * (r_tip/r_meanline)
         eta_final = eta_tt - delta_n
         return delta_n, eta_final
+    
+    def losses_off_design(K_p_rotor, K_s_rotor, K_stator, K_1_rotor, K_2_rotor, pitch_chord_ratio_rotor, pitch_axial_chord_ratio_rotor, c_true, alpha_2, beta_2, beta_3, incidence,  M_2_rel_od, M_3_rel_od, h, stagger_angle_rotor, r_meanline, r_tip, C_2, V_3):
+        # Primary
+        incidence = -1 * incidence
+        phi_squared_P0 = 1 / (1 + ((K_p_rotor) / (K_1_rotor + K_2_rotor * K_p_rotor)))
+        s = pitch_chord_ratio_rotor * c_true
+        d_s = LE_diameter_rotor/s 
+        graph_x = (d_s)**(-1.6) * (np.cos(np.radians(beta_2)) / np.cos(np.radians(beta_3)))**(-2) * (np.radians(incidence))
+
+        def figure_2_34(graph_x):
+            fig_2_34 = pd.read_csv(r'_input_database\figure_2_34.csv')
+            x = fig_2_34['graph_x'].values
+            y = fig_2_34['deg_of_accel'].values
+
+            interp_func = interp1d(x, y, kind='cubic')
+            interpolated_y = interp_func(graph_x)
+
+            return interpolated_y
+        
+        deg_of_accel = figure_2_34(graph_x)
+        phi_squared_P = phi_squared_P0 - deg_of_accel
+        K_p_od = (K_1_rotor * (1-phi_squared_P)) / (phi_squared_P - K_2_rotor * (1-phi_squared_P))
 
 
-class off_design():
-    def calc_off_design(A_3, U_mean,beta_3,Ca_2, Cw_2,beta_2 ):
+        # Secondary
+        d_c = LE_diameter_rotor/c_true
+        graph_x_2 = (d_c)**(-0.3) * (np.cos(np.radians(beta_2)) / np.cos(np.radians(beta_3)))**(-1.5) * ((np.radians(alpha_2) - np.radians(beta_2))/(np.radians(beta_2) + np.radians(beta_3)))
+        if graph_x_2 < 0.27:
+            def figure_2_35(graph_x_2):
+                fig_2_35 = pd.read_csv(r'_input_database\figure_2_35.csv')
+                x = fig_2_35['x'].values
+                y = fig_2_35['K_K_des'].values
+
+                interp_func = interp1d(x, y, kind='cubic')
+                interpolated_y = interp_func(graph_x_2)
+
+                return interpolated_y
+            
+            K_K_des = figure_2_35(graph_x_2)
+            K_s_od =  K_K_des * K_s_rotor
+
+            # Trailing Edge TO BE CONFIRMED
+            K_TET_od, N_rotor_od, c_true_rotor_od, c_a_rotor_od = aerodynamic_losses.trailing_edge_losses_rotor.K_TET(M_2_rel_od, beta_2, beta_3, h, stagger_angle_rotor, r_meanline, pitch_axial_chord_ratio_rotor)
+
+            K_rotor_od = K_p_od + K_s_od + K_TET_od
+
+            eta_tt_od = aerodynamic_losses.efficiency_calculations(K_stator, K_rotor_od, M_2_rel_od, M_3_rel_od, C_2, V_3)
+            delta_n_od, eta_final_od = aerodynamic_losses.efficiency_final(eta_tt_od, h, beta_3, r_tip, r_meanline)
+
+        else:
+            K_K_des, K_s_od, eta_tt_od, delta_n_od, eta_final_od = 0,0,0,0,0
+
+        
+        return eta_tt_od, delta_n_od, eta_final_od
+
+
+class off_design():   
+    def calc_off_design(A_3, U_mean,beta_3,Ca_2, Cw_2, beta_2, a_2, a_3):
         U_mean_od = U_mean *0.9
         C_w_2_od = Cw_2
         flow_coeff_2_od = Ca_2/U_mean_od
@@ -526,6 +564,7 @@ class off_design():
         alpha_2_rel_od_deg = np.rad2deg(alpha_2_rel_od)
         incidence_2 = alpha_2_rel_od_deg - beta_2 #beta_2 is the blade angle -> alpha_2_rel from previous calculations
         v_2_od = np.sqrt(V_w_2_od**2 + Ca_2**2) #relative velocity on the hypoteneuse (total relative velocity at 2)
+        M_2_rel_od = v_2_od / a_2 #assumed speed of sound at 2 OD = speed of sound on design.
 
 
         LHS = R*m_dot_3/A_3
@@ -541,6 +580,8 @@ class off_design():
             T_3_od = T_03 - (C_3_od**2)/(2*1000*c_p_gas)
             P_3_od = P_03 * (T_3_od/T_03)**(gamma_g/(gamma_g-1))
             RHS = i *P_3_od/T_3_od
+            a_3_od = math.sqrt(gamma_g*R*1000*T_3_od)
+
             if np.abs(LHS - RHS) < error_threshold:
                 Ca_3_od = i
                 alpha_3_od = np.rad2deg(np.arctan(C_w_3_od/Ca_3_od))
@@ -548,6 +589,8 @@ class off_design():
                 work_od_cw = U_mean_od*(C_w_3_od + C_w_2_od)
                 work_od_vw = U_mean_od*(V_w_3_od + V_w_2_od)
                 flow_coeff_3_od = Ca_3_od/U_mean_od
+                V_3_od = np.sqrt(V_w_3_od**2 + Ca_3_od**2)
+                M_3_rel_od = V_3_od/a_3_od
                 break
 
         if Ca_3_od == 0: #if nothing happens, return everything as zero
@@ -562,12 +605,11 @@ class off_design():
             work_od_cw = 0
             work_od_vw = 0
             flow_coeff_3_od = 0
+            M_3_rel_od= 0
 
-            return T_3_od, rho_3_od, P_3_od, alpha_3_od, flow_coeff_2_od, incidence_2, v_2_od, alpha_3_od,C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw
+            return T_3_od, rho_3_od, P_3_od, alpha_3_od, flow_coeff_2_od, incidence_2, v_2_od, alpha_3_od,C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw, M_2_rel_od, M_3_rel_od
                 
         else:
-
-            return T_3_od, rho_3_od, P_3_od, alpha_3_od, flow_coeff_2_od, incidence_2, v_2_od, alpha_3_od,C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw
-
+            return T_3_od, rho_3_od, P_3_od, alpha_3_od, flow_coeff_2_od, incidence_2, v_2_od, alpha_3_od,C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw, M_2_rel_od, M_3_rel_od
 
 
