@@ -79,7 +79,7 @@ class aeroturbine():
 
         P_03_rel = P_3*(1+ (gamma_g-1)/2 * M_3_rel**2)**(gamma_g/(gamma_g-1))
         
-        return C_a_3, C_w_3,  V_3, V_w_3, flow_coefficient_3, beta_3, a_3, M_3_rel, A_3,P_03_rel
+        return C_a_3, C_w_3,  V_3, V_w_3, flow_coefficient_3, beta_3, a_3, M_3_rel, A_3, P_03_rel
     
     def calc_stage_2(U, reaction, T_1, T_3, P_3, A_3, V_w_3):
         T_2 = T_3 + reaction * (T_1 - T_3)
@@ -101,6 +101,8 @@ class aeroturbine():
         P_02 = P_2*(1+ (gamma_g-1)/2 * M_2**2)**(gamma_g/(gamma_g-1))
         P_02_rel = P_2*(1+ (gamma_g-1)/2 * M_2_rel**2)**(gamma_g/(gamma_g-1))
         T_02 = T_2 + C_2**2/(2*1000*c_p_gas)
+
+
 
         return T_02, T_2, P_2, rho_2, A_2, C_a_2, flow_coefficient_2, a_2, V_w_2, beta_2, V_2, C_w_2, C_2, alpha_2, M_2, M_2_rel,P_02,P_02_rel
     
@@ -523,7 +525,8 @@ class aerodynamic_losses():
 
         # Secondary
         d_c = LE_diameter_rotor/c_true
-        graph_x_2 = (d_c)**(-0.3) * (np.cos(np.radians(beta_2)) / np.cos(np.radians(beta_3)))**(-1.5) * ((np.radians(beta_2 - incidence) - np.radians(beta_2))/(np.radians(beta_2) + np.radians(beta_3)))
+        #graph_x_2 = (d_c)**(-0.3) * (np.cos(np.radians(beta_2)) / np.cos(np.radians(beta_3)))**(-1.5) * ((np.radians(5) - np.radians(beta_2))/(np.radians(beta_2) + np.radians(beta_3)))
+        graph_x_2 = (d_c)**(-0.3) * (np.cos(np.radians(beta_2)) / np.cos(np.radians(beta_3)))**(-1.5) * ((np.radians(incidence))/(np.radians(beta_2) + np.radians(beta_3)))
         if graph_x_2 < 0.27:
             def figure_2_35(graph_x_2):
                 fig_2_35 = pd.read_csv(r'_input_database\figure_2_35.csv')
@@ -564,6 +567,8 @@ class off_design():
         incidence_2 = alpha_2_rel_od_deg - beta_2 #beta_2 is the blade angle -> alpha_2_rel from previous calculations
         v_2_od = np.sqrt(V_w_2_od**2 + Ca_2**2) #relative velocity on the hypoteneuse (total relative velocity at 2)
         M_2_rel_od = v_2_od / a_2 #assumed speed of sound at 2 OD = speed of sound on design.
+        T_2 = a_2**2/(gamma_g*R*1000)
+
 
 
         LHS = R*m_dot_3/A_3
@@ -590,6 +595,10 @@ class off_design():
                 flow_coeff_3_od = Ca_3_od/U_mean_od
                 V_3_od = np.sqrt(V_w_3_od**2 + Ca_3_od**2)
                 M_3_rel_od = V_3_od/a_3_od
+                # For physics check
+                P_2 = P_3_od * ((T_2/T_3_od) ** (gamma_g/(gamma_g - 1)))
+                P_02_rel = P_2*(1+ (gamma_g-1)/2 * M_2_rel_od**2)**(gamma_g/(gamma_g-1))
+                P_03_rel = P_3_od*(1+ (gamma_g-1)/2 * M_3_rel_od**2)**(gamma_g/(gamma_g-1))
                 break
 
         if Ca_3_od == 0: #if nothing happens, return everything as zero
@@ -605,10 +614,12 @@ class off_design():
             work_od_vw = 0
             flow_coeff_3_od = 0
             M_3_rel_od= 0
+            P_02_rel = 0
+            P_03_rel = 0
 
-            return T_3_od, rho_3_od, P_3_od, alpha_3_od, flow_coeff_2_od, incidence_2, v_2_od, alpha_3_od,C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw, M_2_rel_od, M_3_rel_od
+            return T_3_od, rho_3_od, P_3_od, alpha_3_od, alpha_2_rel_od_deg, flow_coeff_2_od, incidence_2, v_2_od, C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw, M_2_rel_od, M_3_rel_od, P_02_rel, P_03_rel
                 
         else:
-            return T_3_od, rho_3_od, P_3_od, alpha_3_od, flow_coeff_2_od, incidence_2, v_2_od, alpha_3_od,C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw, M_2_rel_od, M_3_rel_od
+            return T_3_od, rho_3_od, P_3_od, alpha_3_od, alpha_2_rel_od_deg, flow_coeff_2_od, incidence_2, v_2_od, C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw, M_2_rel_od, M_3_rel_od, P_02_rel, P_03_rel
 
 
