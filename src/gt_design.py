@@ -621,5 +621,3 @@ class off_design():
                 
         else:
             return T_3_od, rho_3_od, P_3_od, alpha_3_od, alpha_2_rel_od_deg, flow_coeff_2_od, incidence_2, v_2_od, C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw, M_2_rel_od, M_3_rel_od, P_02_rel, P_03_rel
-
-
