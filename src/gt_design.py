@@ -140,7 +140,7 @@ class aeroturbine():
     
     
 
-    def calc_tip_angles(r_m_pointer, r_tip_pointer, alpha_2_pointer, alpha_3_pointer, flow_coeff_2_pointer, flow_coeff_3_pointer, U_pointer, C_a_2, a_2):
+    def calc_tip_angles(r_m_pointer, r_tip_pointer, alpha_2_pointer, alpha_3_pointer, flow_coeff_2_pointer, flow_coeff_3_pointer, U_pointer, C_a_2, a_2,T_02,C_a_3):
         alpha_2_tip_rad = numpy.arctan((r_m_pointer/r_tip_pointer) *numpy.tan(numpy.deg2rad(alpha_2_pointer)))
         alpha_2_tip_deg = numpy.rad2deg(alpha_2_tip_rad)
     
@@ -156,12 +156,27 @@ class aeroturbine():
         U_tip = U_pointer * (r_tip_pointer / r_m_pointer)
         V_2_tip = C_a_2/np.cos(beta_2_tip_rad)
         C_2_tip = C_a_2/np.cos(alpha_2_tip_rad)
+                               
+        C_2_tip = C_a_2/np.cos(alpha_2_tip_rad)
+        C_3_tip = C_a_3/np.cos(alpha_3_tip_rad)
+        V_3_tip = C_a_3/np.cos(beta_3_tip_rad)
+
+        T_2_tip = T_02 - (C_2_tip**2)/(2*c_p_gas*1000)
+        T_3_tip = T_03 - (C_3_tip**2)/(2*c_p_gas*1000)
+        
+
+        a_2_tip = np.sqrt(gamma_g*T_2_tip*R*1000)
+        a_3_tip = np.sqrt(gamma_g*T_3_tip*R*1000)
+
+        M_2_rel_tip = V_2_tip / a_2_tip 
+        M_2_tip = C_2_tip / a_2_tip
+        M_3_rel_tip = V_3_tip / a_3_tip
 
         M_2_rel_tip = V_2_tip / a_2
         M_2_tip = C_2_tip / a_2
 
 
-        return alpha_2_tip_deg, alpha_3_tip_deg, beta_2_tip_deg, beta_3_tip_deg, U_tip, V_2_tip, C_2_tip, M_2_rel_tip, M_2_tip
+        return alpha_2_tip_deg, alpha_3_tip_deg, beta_2_tip_deg, beta_3_tip_deg, U_tip, V_2_tip, C_2_tip, M_2_rel_tip, M_2_tip, M_3_rel_tip
     
 
     def calc_tip_hub_reaction(c_a_3_pointer, c_a_2_pointer ,beta_2_hub, beta_2_tip, beta_3_hub, beta_3_tip, U_hub, U_tip):
