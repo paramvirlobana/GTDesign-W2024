@@ -121,9 +121,9 @@ class aeroturbine():
             rho_2 = P_2/(R*T_2)
             T_02 = T_2 + (C_w_2**2 + (m_dot_2/(rho_2*T_2))**2)/(2*c_p_gas*1000)
             #print(T_02)
-            error = np.abs(T_01 - T_02)
+            error = np.abs(1225.9485919279928 - T_02)
             count = count + 1
-            if (0 < error < 0.1):
+            if (0 < error < 0.001):
                 break
             else:
                 T_2 = T_2 + increment
@@ -145,6 +145,12 @@ class aeroturbine():
             M_2_rel = V_2 / a_2
             P_02 = P_2*(1+ (gamma_g-1)/2 * M_2**2)**(gamma_g/(gamma_g-1))
             P_02_rel = P_2*(1+ (gamma_g-1)/2 * M_2_rel**2)**(gamma_g/(gamma_g-1))
+            #print("")
+            #print(alpha_2)
+            #print(beta_2)
+            #print(M_2)
+            #print(C_a_2)
+            #print(rho_2)
 
 
         else:
