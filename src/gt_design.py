@@ -90,7 +90,7 @@ class aeroturbine():
         flow_coefficient_2 = C_a_2 / U
         a_2 = np.sqrt(gamma_g * R * 1000 * T_2)
         # V_w_2 = V_w_3 - (2*reaction * U)
-        V_w_2 = (c_p_gas * 1000 * (T_01 - T_03) / (U)) - V_w_3
+        V_w_2 = (c_p_gas * 1000 * (T_01 - T_03) / (U)) - V_w_3 #This is the connection to work -> we should change this to T_02 maybe
         beta_2 = np.rad2deg(np.arctan(V_w_2 / C_a_2))
         V_2 = np.sqrt(V_w_2**2 + C_a_2**2)
         C_w_2 = (V_w_2 + U)
