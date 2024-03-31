@@ -631,7 +631,7 @@ class aerodynamic_losses():
             K_s_od =  K_K_des * K_s_rotor
 
             # Trailing Edge TO BE CONFIRMED
-            K_TET_od, N_rotor_od, c_true_rotor_od, c_a_rotor_od = aerodynamic_losses.trailing_edge_losses_rotor.K_TET(M_2_rel_od, beta_2, beta_3, h, stagger_angle_rotor, r_meanline, pitch_axial_chord_ratio_rotor)
+            K_TET_od, N_rotor_od, c_true_rotor_od, c_a_rotor_od,dummy = aerodynamic_losses.trailing_edge_losses_rotor.K_TET(M_2_rel_od, beta_2, beta_3, h, stagger_angle_rotor, r_meanline, pitch_axial_chord_ratio_rotor)
 
             K_rotor_od = K_p_od + K_s_od + K_TET_od
 
