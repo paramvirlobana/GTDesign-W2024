@@ -23,12 +23,15 @@ P_01 = 1182.073662         # [kPa]
 m_dot_1 = 4.835922
 M_1 = 0.125
 
+T_02_cycle = 1225.9485919279928
+
 # BETWEEN STATOR AND ROTOR
 m_dot_2 = m_dot_1 + m_cool_vane_hpt
 
 # TURBINE EXIT
-T_03 = 1053.0511295978204 #1060.6258077081834
-P_03 = 524.594
+T_03 = 1041.2535775588708
+T_03_cooled = 1033.9843383376274
+P_03 = 479.2805488475332 
 m_dot_3 = m_dot_2 + m_cool_disc_hpt
 
 
@@ -50,7 +53,7 @@ class aeroturbine():
         T = T_stagnation/(1 + ((gamma_g - 1)/2) * M**2)
         P = P_stagnation/((1 + ((gamma_g - 1)/2) * M**2))**(gamma_g/(gamma_g - 1))
         rho = P/(0.287*T)
-        c = M * numpy.sqrt(gamma_g * 287 * T)
+        c = M * numpy.sqrt(gamma_g * 287 * T) #--
 
         return T, P, rho, c
     
@@ -60,7 +63,7 @@ class aeroturbine():
         Input:  Stage loading coefficient "psi"
         Output: Returns the value of U
         """
-        U = numpy.sqrt((2*c_p_gas*1000*(T_01 - T_03)) / (psi))
+        U = numpy.sqrt((2*c_p_gas*1000*(T_02_cycle - T_03)) / (psi))
         return U
     
     def calc_stage_3(U, C_3, T_3, rho_3,P_3,alpha_3):
@@ -113,7 +116,7 @@ class aeroturbine():
         count = 0
         T_2 = 1050
         increment = 0.01
-        V_w_2 = (c_p_gas * 1000 * (T_01 - T_03) / (U)) - V_w_3
+        V_w_2 = (c_p_gas * 1000 * (T_02_cycle - T_03) / (U)) - V_w_3
         C_w_2 = (V_w_2 + U)
 
         while count < max_iterations:
@@ -121,7 +124,7 @@ class aeroturbine():
             rho_2 = P_2/(R*T_2)
             T_02 = T_2 + (C_w_2**2 + (m_dot_2/(rho_2*T_2))**2)/(2*c_p_gas*1000)
             #print(T_02)
-            error = np.abs(1225.9485919279928 - T_02)
+            error = np.abs(T_02_cycle - T_02) #cycle_Calc T_02 to be defined as global constant
             count = count + 1
             if (0 < error < 0.001):
                 break
@@ -510,8 +513,9 @@ class aerodynamic_losses():
             numerator = ((1 - term1 * (term2))**(-gamma_g / (gamma_g - 1)) )- 1
             denominator = 1 - ((1 + term1))**(-gamma_g / (gamma_g - 1))
             K_TE = numerator / denominator
-            
-            return K_TE, N, c_true, c_a
+            throat_opening = o
+
+            return K_TE, N, c_true, c_a, throat_opening
         
     class trailing_edge_losses_stator():
 
@@ -570,8 +574,8 @@ class aerodynamic_losses():
             numerator = ((1 - term1 * (term2))**(-gamma_g / (gamma_g - 1)) )- 1
             denominator = 1 - ((1 + term1))**(-gamma_g / (gamma_g - 1))
             K_TE = numerator / denominator
-            
-            return K_TE, N, c_true, c_a
+            throat_opening = o
+            return K_TE, N, c_true, c_a, throat_opening
 
     
     def efficiency_calculations(K_stator, K_rotor, M_2, M_3_rel, C_2, V_3):
