@@ -546,7 +546,7 @@ class aerodynamic_losses():
 
         def required_vals(h, stagger_angle, r_meanline, pitch_axial_chord_ratio, beta_3):
             c_true = (h)/AR_vane
-            c_a = (h * np.cos(np.radians(stagger_angle)))/AR_rotor
+            c_a = (h * np.cos(np.radians(stagger_angle)))/AR_vane
             N = math.floor((2 * np.pi * r_meanline) /(pitch_axial_chord_ratio * c_a))
             o = (pitch_axial_chord_ratio * c_a) * np.sin(np.radians(beta_3))
 
