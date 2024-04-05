@@ -18,17 +18,20 @@ m_cool_vane_hpt = 0.1450776
 m_cool_disc_hpt = 0.0797
 
 # TURBINE INLET
-T_01 = 1245.320         # [k]
-P_01 = 1182.073         # [kPa]
+T_01 = 1245.3208220773054        # [k] 
+P_01 = 1182.073662         # [kPa]
 m_dot_1 = 4.835922
 M_1 = 0.125
+
+T_02_cycle = 1225.9485919279928
 
 # BETWEEN STATOR AND ROTOR
 m_dot_2 = m_dot_1 + m_cool_vane_hpt
 
 # TURBINE EXIT
-T_03 = 1053.051
-P_03 = 524.594
+T_03 = 1041.2535775588708
+T_03_cooled = 1033.9843383376274
+P_03 = 479.2805488475332 
 m_dot_3 = m_dot_2 + m_cool_disc_hpt
 
 
@@ -50,7 +53,7 @@ class aeroturbine():
         T = T_stagnation/(1 + ((gamma_g - 1)/2) * M**2)
         P = P_stagnation/((1 + ((gamma_g - 1)/2) * M**2))**(gamma_g/(gamma_g - 1))
         rho = P/(0.287*T)
-        c = M * numpy.sqrt(gamma_g * 287 * T)
+        c = M * numpy.sqrt(gamma_g * 287 * T) #--
 
         return T, P, rho, c
     
@@ -60,10 +63,10 @@ class aeroturbine():
         Input:  Stage loading coefficient "psi"
         Output: Returns the value of U
         """
-        U = numpy.sqrt((2*c_p_gas*1000*(T_01 - T_03)) / (psi))    
+        U = numpy.sqrt((2*c_p_gas*1000*(T_02_cycle - T_03)) / (psi))
         return U
     
-    def calc_stage_3(U, C_3, T_3, rho_3,reaction,P_3,alpha_3):
+    def calc_stage_3(U, C_3, T_3, rho_3,P_3,alpha_3):
         
         #V_w_3 = c_p_gas*1000*(T_01-T_03)/(2*U) + reaction*U
         C_a_3 = C_3 * np.cos(np.radians(alpha_3))
@@ -86,14 +89,14 @@ class aeroturbine():
         P_2 = P_3 * ((T_2/T_3) ** (gamma_g/(gamma_g - 1)))
         rho_2 = P_2 / (R * T_2)
         A_2 = A_3
-        C_a_2 = m_dot_2/(rho_2 * A_2)
+        C_a_2 = (m_dot_2)/(rho_2 * A_2)
         flow_coefficient_2 = C_a_2 / U
         a_2 = np.sqrt(gamma_g * R * 1000 * T_2)
         # V_w_2 = V_w_3 - (2*reaction * U)
-        V_w_2 = (c_p_gas * 1000 * (T_01 - T_03) / U) - V_w_3
+        V_w_2 = (c_p_gas * 1000 * (T_01 - T_03) / (U)) - V_w_3 #This is the connection to work -> we should change this to T_02 maybe
         beta_2 = np.rad2deg(np.arctan(V_w_2 / C_a_2))
         V_2 = np.sqrt(V_w_2**2 + C_a_2**2)
-        C_w_2 = V_w_2 + U
+        C_w_2 = (V_w_2 + U)
         C_2 = np.sqrt(C_w_2**2 + C_a_2**2)
         alpha_2 = np.rad2deg(np.arctan(C_w_2/C_a_2))
         M_2 = C_2 / a_2
@@ -105,6 +108,76 @@ class aeroturbine():
 
 
         return T_02, T_2, P_2, rho_2, A_2, C_a_2, flow_coefficient_2, a_2, V_w_2, beta_2, V_2, C_w_2, C_2, alpha_2, M_2, M_2_rel,P_02,P_02_rel
+    
+    def calc_stage_2_trial(U,T_1,T_3,P_3,A_3,V_w_3):
+
+        error = 1
+        max_iterations = 10000
+        count = 0
+        T_2 = 1050
+        increment = 0.01
+        V_w_2 = (c_p_gas * 1000 * (T_02_cycle - T_03) / (U)) - V_w_3
+        C_w_2 = (V_w_2 + U)
+
+        while count < max_iterations:
+            P_2 = P_3 * ((T_2/T_3) ** (gamma_g/(gamma_g - 1))) 
+            rho_2 = P_2/(R*T_2)
+            T_02 = T_2 + (C_w_2**2 + (m_dot_2/(rho_2*T_2))**2)/(2*c_p_gas*1000)
+            #print(T_02)
+            error = np.abs(T_02_cycle - T_02) #cycle_Calc T_02 to be defined as global constant
+            count = count + 1
+            if (0 < error < 0.001):
+                break
+            else:
+                T_2 = T_2 + increment
+        
+        if count != max_iterations:
+            reaction = (T_2 - T_3)/(T_1 - T_3)
+            A_2 = A_3
+            C_a_2 = (m_dot_2)/(rho_2 * A_2) 
+
+            flow_coefficient_2 = C_a_2 / U
+            a_2 = np.sqrt(gamma_g * R * 1000 * T_2)
+            
+            beta_2 = np.rad2deg(np.arctan(V_w_2 / C_a_2))
+            V_2 = np.sqrt(V_w_2**2 + C_a_2**2)
+            
+            C_2 = np.sqrt(C_w_2**2 + C_a_2**2)
+            alpha_2 = np.rad2deg(np.arctan(C_w_2/C_a_2))
+            M_2 = C_2 / a_2
+            M_2_rel = V_2 / a_2
+            P_02 = P_2*(1+ (gamma_g-1)/2 * M_2**2)**(gamma_g/(gamma_g-1))
+            P_02_rel = P_2*(1+ (gamma_g-1)/2 * M_2_rel**2)**(gamma_g/(gamma_g-1))
+            #print("")
+            #print(alpha_2)
+            #print(beta_2)
+            #print(M_2)
+            #print(C_a_2)
+            #print(rho_2)
+
+
+        else:
+            T_02 = 0
+            T_2 = 0
+            P_2 = 0
+            rho_2 = 0
+            A_2 = 0
+            C_a_2 = 0
+            flow_coefficient_2 = 0
+            a_2 = 0
+            V_w_2 = 0
+            beta_2 = 0 
+            V_2 = 0 
+            C_w_2 = 0
+            C_2 = 0
+            alpha_2 = 0
+            M_2 = 0
+            M_2_rel = 0
+            P_02 = 0
+            P_02_rel = 0
+            reaction = 0
+            
+        return T_02, T_2, P_2, rho_2, A_2, C_a_2, flow_coefficient_2, a_2, V_w_2, beta_2, V_2, C_w_2, C_2, alpha_2, M_2, M_2_rel,P_02,P_02_rel, reaction
     
     def calc_hub_angles(r_m_pointer, r_hub_pointer, alpha_2_pointer, alpha_3_pointer, flow_coeff_2_pointer, flow_coeff_3_pointer, U_pointer, C_a_2, a_2,T_02, T_03,T_1,C_a_3):
         alpha_2_hub_rad = numpy.arctan((r_m_pointer/r_hub_pointer) *numpy.tan(numpy.deg2rad(alpha_2_pointer)))
@@ -440,8 +513,9 @@ class aerodynamic_losses():
             numerator = ((1 - term1 * (term2))**(-gamma_g / (gamma_g - 1)) )- 1
             denominator = 1 - ((1 + term1))**(-gamma_g / (gamma_g - 1))
             K_TE = numerator / denominator
-            
-            return K_TE, N, c_true, c_a
+            throat_opening = o
+
+            return K_TE, N, c_true, c_a, throat_opening
         
     class trailing_edge_losses_stator():
 
@@ -472,7 +546,7 @@ class aerodynamic_losses():
 
         def required_vals(h, stagger_angle, r_meanline, pitch_axial_chord_ratio, beta_3):
             c_true = (h)/AR_vane
-            c_a = (h * np.cos(np.radians(stagger_angle)))/AR_rotor
+            c_a = (h * np.cos(np.radians(stagger_angle)))/AR_vane
             N = math.floor((2 * np.pi * r_meanline) /(pitch_axial_chord_ratio * c_a))
             o = (pitch_axial_chord_ratio * c_a) * np.sin(np.radians(beta_3))
 
@@ -500,8 +574,8 @@ class aerodynamic_losses():
             numerator = ((1 - term1 * (term2))**(-gamma_g / (gamma_g - 1)) )- 1
             denominator = 1 - ((1 + term1))**(-gamma_g / (gamma_g - 1))
             K_TE = numerator / denominator
-            
-            return K_TE, N, c_true, c_a
+            throat_opening = o
+            return K_TE, N, c_true, c_a, throat_opening
 
     
     def efficiency_calculations(K_stator, K_rotor, M_2, M_3_rel, C_2, V_3):
@@ -557,7 +631,7 @@ class aerodynamic_losses():
             K_s_od =  K_K_des * K_s_rotor
 
             # Trailing Edge TO BE CONFIRMED
-            K_TET_od, N_rotor_od, c_true_rotor_od, c_a_rotor_od = aerodynamic_losses.trailing_edge_losses_rotor.K_TET(M_2_rel_od, beta_2, beta_3, h, stagger_angle_rotor, r_meanline, pitch_axial_chord_ratio_rotor)
+            K_TET_od, N_rotor_od, c_true_rotor_od, c_a_rotor_od,dummy = aerodynamic_losses.trailing_edge_losses_rotor.K_TET(M_2_rel_od, beta_2, beta_3, h, stagger_angle_rotor, r_meanline, pitch_axial_chord_ratio_rotor)
 
             K_rotor_od = K_p_od + K_s_od + K_TET_od
 
