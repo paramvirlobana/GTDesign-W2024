@@ -31,7 +31,7 @@ m_dot_2 = m_dot_1 + m_cool_vane_hpt
 # TURBINE EXIT
 T_03 = 1041.2535775588708
 T_03_cooled = 1033.9843383376274
-P_03 = 479.2805488475332 
+P_03 = 517.9223058003336
 m_dot_3 = m_dot_2 + m_cool_disc_hpt
 
 
