@@ -78,7 +78,7 @@ class aeroturbine():
         beta_3 = np.rad2deg(np.arctan(V_w_3 / C_a_3))
         a_3 = np.sqrt(gamma_g * R * 1000 * T_3)
         M_3_rel = V_3 / a_3
-        A_3 = m_dot_3/(rho_3 * C_a_3)
+        A_3 = m_dot_2/(rho_3 * C_a_3) #
 
         P_03_rel = P_3*(1+ (gamma_g-1)/2 * M_3_rel**2)**(gamma_g/(gamma_g-1))
         
@@ -114,7 +114,7 @@ class aeroturbine():
         error = 1
         max_iterations = 10000
         count = 0
-        T_2 = 1050
+        T_2 = 1060
         increment = 0.01
         V_w_2 = (c_p_gas * 1000 * (T_02_cycle - T_03) / (U)) - V_w_3
         C_w_2 = (V_w_2 + U)
@@ -122,7 +122,7 @@ class aeroturbine():
         while count < max_iterations:
             P_2 = P_3 * ((T_2/T_3) ** (gamma_g/(gamma_g - 1))) 
             rho_2 = P_2/(R*T_2)
-            T_02 = T_2 + (C_w_2**2 + (m_dot_2/(rho_2*T_2))**2)/(2*c_p_gas*1000)
+            T_02 = T_2 + (C_w_2**2 + (m_dot_2/(rho_2*A_3))**2)/(2*c_p_gas*1000)
             #print(T_02)
             error = np.abs(T_02_cycle - T_02) #cycle_Calc T_02 to be defined as global constant
             count = count + 1
