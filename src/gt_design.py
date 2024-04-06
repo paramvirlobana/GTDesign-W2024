@@ -487,7 +487,7 @@ class aerodynamic_losses():
             c_true = (h)/AR_rotor
             c_a = (h * np.cos(np.radians(stagger_angle)))/AR_rotor
             N = math.floor((2 * np.pi * r_meanline) /(pitch_axial_chord_ratio * c_a))
-            o = (pitch_axial_chord_ratio * c_a) * np.sin(np.radians(beta_3))
+            o = (pitch_axial_chord_ratio * c_a) * np.cos(np.radians(beta_3))
 
             return c_true, c_a, N, o
             
@@ -548,7 +548,7 @@ class aerodynamic_losses():
             c_true = (h)/AR_vane
             c_a = (h * np.cos(np.radians(stagger_angle)))/AR_vane
             N = math.floor((2 * np.pi * r_meanline) /(pitch_axial_chord_ratio * c_a))
-            o = (pitch_axial_chord_ratio * c_a) * np.sin(np.radians(beta_3))
+            o = (pitch_axial_chord_ratio * c_a) * np.cos(np.radians(beta_3))
 
             return c_true, c_a, N, o
             
@@ -710,3 +710,16 @@ class off_design():
                 
         else:
             return T_3_od, rho_3_od, P_3_od, alpha_3_od, alpha_2_rel_od_deg, flow_coeff_2_od, incidence_2, v_2_od, C_w_3_od,Ca_3_od,U_mean_od,flow_coeff_3_od, work_od_cw, work_od_vw, M_2_rel_od, M_3_rel_od, P_02_rel, P_03_rel
+        
+
+
+
+def verify_zweifel_rotor(r_hub, h, N,c, alpha_1, alpha_2):
+    s = (2*np.pi * (r_hub + 0.5*h))/N
+    zxr = 2 * ((s/c)) * (np.tan(np.radians(alpha_1)) + np.tan(np.radians(alpha_2))) * np.cos(np.radians(alpha_2))**2
+    return zxr
+
+def verify_zweifel_stator(r_hub, h, N,c, alpha_1, alpha_2):
+    s = (2*np.pi * (r_hub + 0.5*h))/N
+    zxs = 2 * ((s/c)) * (np.tan(np.radians(alpha_1)) + np.tan(np.radians(alpha_2))) * np.cos(np.radians(alpha_2))**2
+    return zxs
