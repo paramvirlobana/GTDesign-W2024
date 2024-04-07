@@ -150,12 +150,6 @@ class aeroturbine():
             P_02 = P_2*(1+ (gamma_g-1)/2 * M_2**2)**(gamma_g/(gamma_g-1))
             P_02_rel = P_2*(1+ (gamma_g-1)/2 * M_2_rel**2)**(gamma_g/(gamma_g-1))
             #print(P_01 - P_02)
-            print("")
-            print(alpha_2)
-            print(beta_2)
-            print(M_2)
-            print(C_a_2)
-            print(rho_2)
 
 
         else:
