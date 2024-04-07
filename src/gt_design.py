@@ -47,6 +47,10 @@ TE_rotor = 0.762/1000   # minimum trailing edge thickness in [m]
 tip_clearance = 2.0    # minimum tip clearance span -> maximum is 0.02
 LE_diameter_rotor = 0.00508             #0.000254*12
 
+"""
+This file contains all the main input and functions
+"""
+
 class aeroturbine():
 
     def calc_properties(M, T_stagnation, P_stagnation):
@@ -114,15 +118,16 @@ class aeroturbine():
         error = 1
         max_iterations = 10000
         count = 0
-        T_2 = 1050
+        T_2 = 1060
         increment = 0.01
         V_w_2 = (c_p_gas * 1000 * (T_02_cycle - T_03) / (U)) - V_w_3
         C_w_2 = (V_w_2 + U)
 
         while count < max_iterations:
-            P_2 = P_3 * ((T_2/T_3) ** (gamma_g/(gamma_g - 1))) 
+            
+            P_2 = P_01 * ((T_2/T_02_cycle) ** (gamma_g/(gamma_g - 1))) #changed P_2 = P_3 * ((T_2/T_3)**(gamma_g/(gamma_g-1)))
             rho_2 = P_2/(R*T_2)
-            T_02 = T_2 + (C_w_2**2 + (m_dot_2/(rho_2*T_2))**2)/(2*c_p_gas*1000)
+            T_02 = T_2 + (C_w_2**2 + (m_dot_2/(rho_2*A_3))**2)/(2*c_p_gas*1000)
             #print(T_02)
             error = np.abs(T_02_cycle - T_02) #cycle_Calc T_02 to be defined as global constant
             count = count + 1
@@ -148,13 +153,6 @@ class aeroturbine():
             M_2_rel = V_2 / a_2
             P_02 = P_2*(1+ (gamma_g-1)/2 * M_2**2)**(gamma_g/(gamma_g-1))
             P_02_rel = P_2*(1+ (gamma_g-1)/2 * M_2_rel**2)**(gamma_g/(gamma_g-1))
-            #print("")
-            #print(alpha_2)
-            #print(beta_2)
-            #print(M_2)
-            #print(C_a_2)
-            #print(rho_2)
-
 
         else:
             T_02 = 0
