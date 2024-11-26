@@ -1,9 +1,8 @@
 # Gas Turbine Design and Optimization Framework
-Author: ```Paramvir Lobana``` \
 Program written for the course: ```Gas Turbine Design``` ```Winter 2024``` ```Concordia University, Montreal```
 
 ## Description
-A very basic turbine design cycle for the core of a gas turbine engine. Uses basic optimization methods to obtain the design that meets the requirements. The image below shows the turbine schematic used in the project presented via this code.\
+A very basic turbine design cycle for the core of a gas turbine engine. Uses basic optimization methods to obtain the design that meets the requirements. The image below shows the turbine schematic used in the project presented via this code.
 
 <div style="text-align: center;">
   <img src="report/figures/engine_core.png?raw=true" alt="XDSM Diagram" width="500"/>
