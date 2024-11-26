@@ -1,0 +1,148 @@
+\chapter{Cycle Calculations} \label{sec:cyclecalcs}
+The objective of this technical report is to present a design for a new family of gas turbine engines under a risk-sharing partnership with Pratt \& Whitney Canada.
+The turboshaft engine design should have a three shaft arrangement for sea level operation at $74^{o}F$.
+The engine features a single-stage low-pressure compressor (LPC) and axial turbine 
+(LPT), followed by a centrifugal high-pressure compressor (HPC) and axial 
+high-pressure turbine (HPT). The power turbine (PT) drives the helicopter rotor 
+through a reduction gearbox. 
+
+The following figure presents the engine schematics along with all the stations.
+\vspace{20pt}
+\begin{figure}[H]
+  \centering
+  \input{figures/turbine_schematic}
+  \caption{Engine Schematic}
+  \label{fig:enter-label}
+\end{figure} 
+
+\clearpage
+
+The key engine requirements are summarized in \autoref{tab:enginecharacteristics}.
+\input{tables/enginecharacteristics.tex} 
+
+
+This section discusses the method used for the cycle calculations. The calculations for each stage are presented as well.
+
+\section{Inlet}
+Since $P_{00} = P_a$ and $T_{00} = T_a$, the pressure drop across the inlet can be calculated as:
+$$P_{01} = 0.99 \times P_{00} = 100.311 \; kPa$$
+$$T_{01} = 296.483 \; K$$
+
+\section{Low Pressure Compressor} \label{lpc}
+The pressure at the LPT exit $(P_{02})$ can be calculated as:
+$$P_{02} = PR_{LPC} \times P_{01} = 401.247 \; kPa$$
+
+The temperature can be obtained using the following relation:
+\begin{equation}
+  T_{02} - T_{01} = \frac{T_{01}}{\eta_{lpc}} \left[  \left( \frac{P_{02}}{P_{01}} \right) ^{(\gamma - 1)/\gamma}  - 1  \right]
+\end{equation}
+
+$$T_{02} = 463.059 \; K$$
+
+Therefore, the specific work done for the LPC:
+$$W_{LPC} = c_{p, \, air} \times (T_{02} - T_{01}) = 167.409 \; kJ/kg$$
+
+\section{High Pressure Compressor}
+
+Following the steps from Section \ref{lpc}, $P_{03}$, $T_{03}$ and $W_{HPC}$ can be calculated:
+
+$$P_{03} = PR_{HPC} \times P_{02} = 1203.741 \; kPa$$
+
+$$T_{03} = 662.764 \; K$$
+
+$$W_{HPC} = c_{p, \, air} \times (T_{03} - T_{02}) = 200.703 \; kJ/kg$$
+
+Since the bleed air is obtained from the HPC exit, the resulting mass flow rate entering the combustion chamber:
+$$\dot{m}_{combustion} = 0.91 \times \dot{m}_{total} = 4.741 \; kg/s$$
+
+\section{Combustion Chamber}
+Pressure at the exit of the combustion chamber can be calculated using the combustion chamber pressure loss:
+$$P_{04} = P_{03} \times 0.982 = 1182.073 \; kPa$$
+
+The temperature at the exit of the combustion chamber can be calculated using the following relation:
+$$T_{04} = \frac{c_{p, \, air} \times T_{03} + f \times Q \times \eta_{cc}}{(1 + f) \times c_{p, \, gas}} = 1245.320 \; K$$
+\clearpage
+\section{High Pressure Turbine} \label{hpt_calcs}
+
+The following points are noted for the calculations of the turbine temperatures and pressures with cooling \cite{saravanamuttoo2017}:
+\begin{itemize}
+  \item Turbine air cooling percentage considered as the percent flow of turbine inlet flow.
+  \item Stator bleed contributes to power developed.
+  \item Disc bleed do not contribute to power developed.
+\end{itemize}
+
+The combusted gas entering the high pressure turbine also included the mass of the fuel. This is calculated as:
+$$\dot{m}_{HPT} = \dot{m}_{combustion} + 0.02 \times \dot{m}_{combustion} = 4.835 \; kg/s$$
+Similarly, the mass flow of air to be used for vane and disc cooling for the HPT is as follows:
+$$\dot{m}_{vane,\, HPT} = \dot{m}_{turbine} \times 0.03 = 0.1450 \; kg/s$$
+$$\dot{m}_{disc,\, HPT} = \dot{m}_{turbine} \times 0.0165 = 0.0797 \; kg/s$$
+
+To obtain the temperature after the vane, the following energy balance can be performed:
+$$T_{\text{hpt after vane}} = \frac{{(\dot{m}_{\text{turbine}} \cdot c_{p_{\text{gas}}} \cdot T_{04}) + (\dot{m}_{vane,\, HPT} \cdot c_{p_{\text{air}}} \cdot T_{03})}}{{c_{p_{\text{gas}}} \cdot (\dot{m}_{\text{turbine}} + \dot{m}_{vane,\, HPT})}}$$
+$$T_{\text{hpt after vane}} =  1225.9485\; K$$
+
+The temperature after the rotor can be evaluated based on the power required by the HPC:
+$$T_{\text{hpt after rotor}} = T_{04} - \frac{{1.01 \cdot W_{\text{hpc}}}}{{(m_{\text{turbine}} + \dot{m}_{vane,\, HPT}) \cdot c_{p,\,gas}}} = 1041.2535\; K$$
+
+The HPT exit temperature can be calculated by accounting for the disc bleed air:
+$$T_{05} = \frac{{((\dot{m}_{\text{turbine}} + \dot{m}_{vane,\, HPT}) \cdot c_{p_{\text{gas}}} \cdot T_{\text{hpt after rotor}}) + 
+(\dot{m}_{disc,\, HPT} \cdot c_{p_{\text{air}}} \cdot T_{03})}}{{c_{p_{\text{gas}}} \cdot (\dot{m}_{\text{turbine}} + \dot{m}_{vane,\, HPT} + 
+\dot{m}_{disc,\, HPT})}}
+$$
+
+
+$$T_{05} = 1033.9843\; K$$
+
+The pressure can be evaluated using the isentropic efficiency. For this design, the HPT efficient has been selected as 84 \%. The following relation is used:
+\begin{equation} \label{eq:pressure_eq}
+  T_{04} - T_{05} = \eta_{HPT} T_{04} \left[ 1 - \left(  \frac{1}{P_{04}/P_{05}} \right) ^{(\gamma - 1)/\gamma}\right]
+\end{equation}
+
+$$P_{05} = 517.9223\; kPa$$
+
+\section{Low Pressure Turbine}
+The total mass of the gas entering the LPT includes the cooling air from the HPT as well:
+$$\dot{m}_{LPT} = \dot{m}_{HPT} + \dot{m}_{disc,\, HPT}$$
+$$\dot{m}_{disc,\, HPT} = 0.011 \times \dot{m}_{turbine}$$
+Following similar calculation procedure as seen in Section \ref{hpt_calcs}, the following values are calculated:
+$$T_{\text{lpt after rotor}} = 882.3564 \; K$$
+$$T_{06} = 879.2135 \; K$$
+
+\section{Exhaust}
+Since the exit conditions are already given in the problem statement, the calculations for the exhaust are carried out first.
+Using the exit loss and the exit mach number, the exit total pressure can be calculated using the following relation:
+\begin{equation}
+  \frac{P_{08}}{P_0} = \left[  1 + \left(  \frac{\gamma - 1}{2} \right) M_{exit}^2  \right]^{\frac{\gamma}{\gamma-1}}   
+\end{equation}
+
+$$P_{08} = 102.853\; kPa$$
+
+Therefore, the Power Turbine exit pressure can be calculated as:
+$$P_{07} = 1.02 \times P_{08} = 104.910\; kPa$$
+
+\section{Power Turbine}
+The total mass of the gas entering the PT includes the cooling air from the HPT and LPT:
+$$\dot{m}_{PT} = \dot{m}_{LPT} + \dot{m}_{disc,\, LPT}$$
+
+Incorporating ITD losses:
+$$P_{06, \, PT} = (1 - ITD_{loss}) \times P_{06} = 240.755 \; kPa$$
+
+Following similar calculation procedure from Section \ref{hpt_calcs}:
+$$T_{\text{pt after rotor}} = 727.5310 \; K$$
+After adding disc cooling air:
+$$T_{07} = 725.8100 \; K$$
+
+
+\section{Work and SFC}
+The work for the HPT can be computed as following.
+
+$$W_{HPT} = c_{p, \, gas} (T_{06} - T_{07}) = 212.0 kJ/kg$$
+
+
+Work can be calculated as follows:
+$$W_{PT} = c_{p, \, gas} (T_{06} - T_{07}) \times 0.99 = 172.4 \; kJ/kg$$
+
+$$SFC = \frac{3600 \times 0.02}{W_{PT}} = 0.4176$$
+
+
+\clearpage

@@ -19,9 +19,9 @@
 \matrix[MatrixSetup]{
 %Row 0
 &
+\node [DataIO] (output_opt) {$x^{(0)}$};&
 &
-\node [DataIO] (output_solver) {$\begin{array}{c}\Lambda, \psi \\ \alpha_3, M_{exit}\end{array}$};&
-\node [DataIO] (output_meanline_design) {$\begin{array}{c}\text{Cycle Calculations} \\ T_{01}, T_{02}, T_{03} \\ P_{01}, P_{03}\end{array}$};&
+&
 &
 &
 &
@@ -30,72 +30,72 @@
 %Row 1
 \node [DataIO] (left_output_opt) {$\text{Optimized Design *}$};&
 \node [Optimization] (opt) {$\text{Optimizer}$};&
+\node [DataInter] (opt-meanline_design) {$1: \psi, \alpha_3, M_3$};&
+\node [DataInter] (opt-structural_design) {$2: AN^2$};&
 &
-&
-&
-&
-&
+\node [DataInter] (opt-off_design) {$4: i_{des}$};&
+\node [DataInter] (opt-aerodynamic_losses) {$5: \zeta_{rotor}, y_1$};&
 &
 \\
 %Row 2
+\node [DataIO] (left_output_meanline_design) {$\eta_{design}^{\star}$};&
+\node [DataInter] (meanline_design-opt) {$\eta_{design}$};&
+\node [Function] (meanline_design) {$\begin{array}{c}\text{1:} \\ \text{Meanline Design}\end{array}$};&
+\node [DataInter] (meanline_design-structural_design) {$2: y_2$};&
+\node [DataInter] (meanline_design-blade_vortex_analysis) {$3: y_2$};&
 &
-&
-\node [MDA] (solver) {$\text{MDA}$};&
-&
-&
-&
-&
-&
+\node [DataInter] (meanline_design-aerodynamic_losses) {$5: y_2$};&
+\node [DataInter] (meanline_design-funcs) {$\eta_{design}$};&
 \\
 %Row 3
+\node [DataIO] (left_output_structural_design) {$AN^2{\star}$};&
+\node [DataInter] (structural_design-opt) {$AN^2$};&
+&
+\node [Function] (structural_design) {$\begin{array}{c}\text{2:} \\ \text{Structural Analysis}\end{array}$};&
+\node [DataInter] (structural_design-blade_vortex_analysis) {$3: y_3$};&
 &
 &
-\node [DataInter] (meanline_design-solver) {$\begin{array}{c}\phi_2, \phi_3, \beta_2, \alpha_2 \\ A_2, A_3, C_1, C_2, C_3\end{array}$};&
-\node [Function] (meanline_design) {$\begin{array}{c}\text{Analysis - 1} \\ \text{Meanline Design}\end{array}$};&
-\node [DataInter] (meanline_design-structural_design) {$A_2, U$};&
-\node [DataInter] (meanline_design-blade_vortex_analysis) {$\begin{array}{c}\phi_2, \phi_3, \alpha_2 \\ U, C_{a_2}\end{array}$};&
-&
-&
+\node [DataInter] (structural_design-funcs) {$6: AN^2$};&
 \\
 %Row 4
 &
 &
-\node [DataInter] (structural_design-solver) {$\begin{array}{c}N, \omega, r_t \\ r_h, r_m, h\end{array}$};&
 &
-\node [Function] (structural_design) {$\begin{array}{c}\text{Analysis - 2} \\ \text{Structural Analysis}\end{array}$};&
-\node [DataInter] (structural_design-blade_vortex_analysis) {$r_t, r_h, r_m$};&
 &
+\node [Function] (blade_vortex_analysis) {$\begin{array}{c}\text{3:} \\ \text{Blade Vortex Analysis}\end{array}$};&
+&
+\node [DataInter] (blade_vortex_analysis-aerodynamic_losses) {$5: y_4$};&
 &
 \\
 %Row 5
+\node [DataIO] (left_output_off_design) {$i_{des}^{\star}$};&
+\node [DataInter] (off_design-opt) {$i_{des}$};&
 &
 &
-\node [DataInter] (blade_vortex_analysis-solver) {$\begin{array}{c}\alpha_{2h}, \alpha_{2t}, \beta_{2h}, \beta_{2t} \\ \alpha_{3h}, \alpha_{3t}, \beta_{3h}, \beta_{3t}\end{array}$};&
 &
-&
-\node [Function] (blade_vortex_analysis) {$\begin{array}{c}\text{Analysis - 3} \\ \text{Blade Vortex Analysis}\end{array}$};&
-&
-&
+\node [Function] (off_design) {$\begin{array}{c}\text{4:} \\ \text{Off Design}\end{array}$};&
+\node [DataInter] (off_design-aerodynamic_losses) {$5: y_5$};&
+\node [DataInter] (off_design-funcs) {$\eta_{off-design}$};&
 \\
 %Row 6
 &
 &
+\node [DataInter] (aerodynamic_losses-meanline_design) {$K_{T_{design}}$};&
 &
+\node [DataInter] (aerodynamic_losses-blade_vortex_analysis) {$K_{T_{off-design}}$};&
 &
-&
-&
-\node [Function] (off_design) {$\begin{array}{c}\text{Analysis - 4} \\ \text{Off Design}\end{array}$};&
-&
+\node [Function] (aerodynamic_losses) {$\begin{array}{c}\text{5:} \\ \text{Aerodynamic Losses}\end{array}$};&
+\node [DataInter] (aerodynamic_losses-funcs) {$6: N_{rotor}, \zeta_{rotor}$};&
 \\
 %Row 7
 &
-\node [DataInter] (aerodynamic_losses-opt) {$\begin{array}{c}\eta_0 \\ \eta_{0_{off}}\end{array}$};&
+\node [DataInter] (funcs-opt) {$f$};&
 &
 &
 &
 &
-&
-\node [Function] (aerodynamic_losses) {$\begin{array}{c}\text{Analysis - 5} \\ \text{Aerodynamic Losses}\end{array}$};&
+\node [DataInter] (funcs-aerodynamic_losses) {$N_{rotor}$};&
+\node [Metamodel] (funcs) {$\begin{array}{c}\text{6:} \\ \text{Objective Function}\end{array}$};&
 \\
 %Row 8
 &
@@ -115,24 +115,56 @@
 \begin{pgfonlayer}{data}
 \path
 % Horizontal edges
-(aerodynamic_losses) edge [DataLine] (aerodynamic_losses-opt)
+(opt) edge [DataLine] (opt-off_design)
+(opt) edge [DataLine] (opt-meanline_design)
+(opt) edge [DataLine] (opt-structural_design)
 (meanline_design) edge [DataLine] (meanline_design-structural_design)
 (structural_design) edge [DataLine] (structural_design-blade_vortex_analysis)
 (meanline_design) edge [DataLine] (meanline_design-blade_vortex_analysis)
-(meanline_design) edge [DataLine] (meanline_design-solver)
-(structural_design) edge [DataLine] (structural_design-solver)
-(blade_vortex_analysis) edge [DataLine] (blade_vortex_analysis-solver)
+(opt) edge [DataLine] (opt-aerodynamic_losses)
+(aerodynamic_losses) edge [DataLine] (aerodynamic_losses-funcs)
+(meanline_design) edge [DataLine] (meanline_design-aerodynamic_losses)
+(off_design) edge [DataLine] (off_design-aerodynamic_losses)
+(funcs) edge [DataLine] (funcs-aerodynamic_losses)
+(meanline_design) edge [DataLine] (meanline_design-opt)
+(meanline_design) edge [DataLine] (meanline_design-funcs)
+(off_design) edge [DataLine] (off_design-opt)
+(off_design) edge [DataLine] (off_design-funcs)
+(off_design) edge [DataLine] (off_design-opt)
+(structural_design) edge [DataLine] (structural_design-opt)
+(blade_vortex_analysis) edge [DataLine] (blade_vortex_analysis-aerodynamic_losses)
+(structural_design) edge [DataLine] (structural_design-funcs)
+(aerodynamic_losses) edge [DataLine] (aerodynamic_losses-blade_vortex_analysis)
+(aerodynamic_losses) edge [DataLine] (aerodynamic_losses-meanline_design)
+(funcs) edge [DataLine] (funcs-opt)
+(off_design) edge [DataLine] (left_output_off_design)
+(meanline_design) edge [DataLine] (left_output_meanline_design)
+(structural_design) edge [DataLine] (left_output_structural_design)
 (opt) edge [DataLine] (left_output_opt)
 % Vertical edges
-(aerodynamic_losses-opt) edge [DataLine] (opt)
+(opt-off_design) edge [DataLine] (off_design)
+(opt-meanline_design) edge [DataLine] (meanline_design)
+(opt-structural_design) edge [DataLine] (structural_design)
 (meanline_design-structural_design) edge [DataLine] (structural_design)
 (structural_design-blade_vortex_analysis) edge [DataLine] (blade_vortex_analysis)
 (meanline_design-blade_vortex_analysis) edge [DataLine] (blade_vortex_analysis)
-(meanline_design-solver) edge [DataLine] (solver)
-(structural_design-solver) edge [DataLine] (solver)
-(blade_vortex_analysis-solver) edge [DataLine] (solver)
-(solver) edge [DataLine] (output_solver)
-(meanline_design) edge [DataLine] (output_meanline_design);
+(opt-aerodynamic_losses) edge [DataLine] (aerodynamic_losses)
+(aerodynamic_losses-funcs) edge [DataLine] (funcs)
+(meanline_design-aerodynamic_losses) edge [DataLine] (aerodynamic_losses)
+(off_design-aerodynamic_losses) edge [DataLine] (aerodynamic_losses)
+(funcs-aerodynamic_losses) edge [DataLine] (aerodynamic_losses)
+(meanline_design-opt) edge [DataLine] (opt)
+(meanline_design-funcs) edge [DataLine] (funcs)
+(off_design-opt) edge [DataLine] (opt)
+(off_design-funcs) edge [DataLine] (funcs)
+(off_design-opt) edge [DataLine] (opt)
+(structural_design-opt) edge [DataLine] (opt)
+(blade_vortex_analysis-aerodynamic_losses) edge [DataLine] (aerodynamic_losses)
+(structural_design-funcs) edge [DataLine] (funcs)
+(aerodynamic_losses-blade_vortex_analysis) edge [DataLine] (blade_vortex_analysis)
+(aerodynamic_losses-meanline_design) edge [DataLine] (meanline_design)
+(funcs-opt) edge [DataLine] (opt)
+(opt) edge [DataLine] (output_opt);
 \end{pgfonlayer}
 
 \end{tikzpicture}

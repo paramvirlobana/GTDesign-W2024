@@ -254,10 +254,6 @@ class aeroturbine():
 
         reaction_hub = (c_a_3_pointer * numpy.tan(numpy.deg2rad(beta_3_hub)) - c_a_2_pointer*numpy.tan(numpy.deg2rad(beta_2_hub)))/(2*U_hub)
         reaction_tip = (c_a_3_pointer * numpy.tan(numpy.deg2rad(beta_3_tip)) - c_a_2_pointer*numpy.tan(numpy.deg2rad(beta_2_tip)))/(2*U_tip)
-
-
-
-
         return reaction_hub, reaction_tip
     
 
@@ -612,7 +608,6 @@ class aerodynamic_losses():
 
         # Secondary
         d_c = LE_diameter_rotor/c_true
-        #graph_x_2 = (d_c)**(-0.3) * (np.cos(np.radians(beta_2)) / np.cos(np.radians(beta_3)))**(-1.5) * ((np.radians(5) - np.radians(beta_2))/(np.radians(beta_2) + np.radians(beta_3)))
         graph_x_2 = (d_c)**(-0.3) * (np.cos(np.radians(beta_2)) / np.cos(np.radians(beta_3)))**(-1.5) * ((np.radians(incidence))/(np.radians(beta_2) + np.radians(beta_3)))
         if graph_x_2 < 0.27:
             def figure_2_35(graph_x_2):
@@ -655,8 +650,6 @@ class off_design():
         v_2_od = np.sqrt(V_w_2_od**2 + Ca_2**2) #relative velocity on the hypoteneuse (total relative velocity at 2)
         M_2_rel_od = v_2_od / a_2 #assumed speed of sound at 2 OD = speed of sound on design.
         T_2 = a_2**2/(gamma_g*R*1000)
-
-
 
         LHS = R*m_dot_3/A_3
         error_threshold = LHS * 0.01 #1 percent error of the LHS

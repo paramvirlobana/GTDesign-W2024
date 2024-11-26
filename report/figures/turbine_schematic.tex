@@ -1,0 +1,128 @@
+\begin{tikzpicture}[scale=0.5]
+
+%\draw [lightgray](0,0) grid (30, 20);
+
+% Inlet 
+\draw [thick] (1, 5) -- (4.5, 5);
+\draw [thick] (1, 8) -- (3, 8);
+\draw [thick] (3, 8) arc (270:360:1);
+\draw [thick] (4, 9) -- (4, 14);
+\draw [thick] (4, 14) arc (180:120:1);
+
+% SHAFTS
+\fill [lightgray] (26, 9.75) rectangle (3, 10.25); % Power turbine shaft
+\fill [darkgray] (22, 9.75) rectangle (5, 10.25); % High Pressure shaft
+\fill [red] (8.5, 9.75) rectangle (18, 10.25); % Low Pressure shaft
+%==============================================================================================
+
+% Internal Engine Components
+\draw [thick] (1, 7) -- (5, 7);
+\draw [-{Stealth[scale=3]}] (1, 7) -- (3, 7);
+%LPC
+\draw [thick] (5,5) -- (5, 15) -- (7.5, 13.5) -- (7.5, 6.5) -- (5,5);
+%---------------------
+\draw [thick] (7.5, 13.5) -- (7.5, 15) -- (8.5, 15) -- (8.5, 13.5) ;
+\draw [-{Stealth[scale=2]}] (7.5, 15) -- (8.25, 15);
+%---------------------
+%HPC
+\draw [thick] (8.5,6.5) -- (8.5, 13.5) -- (11, 12) -- (11, 8) -- (8.5,6.5);
+
+% Combustion Chamber
+\draw [thick] (11, 12) -- (11, 14.5) -- (12, 14.5);
+\draw [-{Stealth[scale=3]}] (11, 12) -- (11, 13.5);
+\draw [thick] (13, 14.5) circle [radius=1];
+\draw [thick] (14, 14.5) -- (15, 14.5) -- (15, 12);
+\draw [-{Stealth[scale=3]}] (15, 14.5) -- (15, 13);
+
+%HPT
+\draw [thick]  (15, 13) -- (15, 7) -- (16.5, 8) -- (18, 8) -- (18, 12) -- (16.5, 12) -- (15, 13);
+\draw [thick]  (16.5, 12) -- (16.5, 7);
+%---------------------
+\draw [thick] (18, 12) -- (18, 15) -- (19, 15) -- (19, 12) ;
+\draw [-{Stealth[scale=2]}] (18, 15) -- (18.75, 15);
+%---------------------
+
+
+%LPT
+\draw [thick] (22, 6.5) -- (22, 13.5) -- (19, 12) -- (19, 8) -- (22, 6.5);
+
+%---------------------
+\draw [thick] (22, 12) -- (22, 15.5) -- (23, 15.5) -- (23, 14) ;
+\draw [-{Stealth[scale=2]}] (22, 15.5) -- (22.75, 15.5);
+%---------------------
+
+% Power Turbine
+\draw [thick] (26,4.5) -- (26, 15.5) -- (23, 14) -- (23, 6) -- (26, 4.5);
+\draw [thick] (26, 8.25) -- (29.5, 8.25);
+\draw [-{Stealth[scale=3]}] (26, 8.25) -- (28, 8.25);
+
+% Exhaust
+\draw [thick] (27, 7) -- (29, 8);
+\draw [thick] (27, 13) -- (29, 12);
+
+%==============================================================================================
+
+% Gearbox
+\draw [thick] (1, 9) rectangle (3, 11);
+\coordinate[label=above: \small{Gearbox}] (Y) at (2, 11);
+% Naming
+
+
+% Compressor
+\coordinate[label=above: LPC] (A) at (6.25,10.5);
+\coordinate[label=above: HPC] (B) at (9.75,10.5);
+
+% Compressor
+\coordinate[label=above: CC] (C) at (13,14.15);
+
+% Turbine
+\coordinate[label=above: HPT] (D) at (16.5,12.5);
+\coordinate[label=above: \tiny{Stator}] (DA) at (15.75,10.5);
+\coordinate[label=above: \tiny{Rotor}] (DB) at (17.25,10.5);
+
+
+
+\coordinate[label=above: LPT] (E) at (20.5,10.5);
+\coordinate[label=above: PT] (G) at (24.5,10.5);
+
+
+\coordinate[label=above: Inlet] (H) at (2.5,5.5);
+\coordinate[label=above: \rotatebox{90} {Exhaust}] (H) at (28,8.5);
+
+% Stations
+\coordinate[label=below: 1] (Y) at (4.75, 5);
+
+\coordinate[label=above: 2] (Y) at (8, 15.25);
+
+\coordinate[label=above: 3] (Y) at (11, 14.5);
+
+\coordinate[label=above: 4] (Y) at (15, 14.5);
+
+\coordinate[label=above: 5] (Y) at (18, 15.25);
+
+\coordinate[label=above: 6] (Y) at (22, 15.75);
+
+\coordinate[label=below: 7] (Y) at (26.5, 7);
+
+\coordinate[label=below: 0] (Y) at (0.5, 5);
+
+\coordinate[label=below: 0] (Y) at (29.5, 8.25);
+
+
+
+% Cooling
+
+% HPT VANE
+\draw [blue, thick] (11, 8) -- (11, 4) -- (15, 4);
+\draw [blue, thick, ->] (15, 4) -- (15, 7);
+%HPT DISC
+\draw [blue, thick] (15, 4) -- (16.5, 4);
+\draw [blue, thick, ->] (16.5, 4) -- (16.5, 8);
+% LPT DISC
+\draw [blue, thick] (16.5, 4) -- (20.5, 4);
+\draw [blue, thick, ->] (20.5, 4) -- (20.5, 7.25);
+% PT DISC
+\draw [blue, thick] (20.5, 4) -- (24.5, 4);
+\draw [blue, thick, ->] (24.5, 4) -- (24.5, 5.25);
+
+\end{tikzpicture}

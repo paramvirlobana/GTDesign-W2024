@@ -1,0 +1,32 @@
+\section{Assumptions} \label{sec:assumptions}
+The following assumptions are made \cite{saravanamuttoo2017}
+\begin{itemize}
+  \item A low value of $\psi$ leads to having more stages for a given turbine output. Hence, the objective will be to keep the value of $\psi$ from 3 to 5 based on current aircraft practices \cite{gt_theory}.
+  \item A low value of $\phi$ leads to a larger annulus area for a given mass flow. A value of $\phi$ from 0.8 to 1.0 is recommended from literature \cite{gt_theory}.
+  \item As an initial guess, a 50 per cent reaction design point is chosen while eliminating all values near 0 \cite{axialflowturbines}.
+  \item Additionally, for jet propulsion, the swirl angle at the exit stage must be kept low since it leads to losses on the jet pipe and propelling nozzle \cite{farokhi2021aircraft}.
+\end{itemize} 
+
+\autoref{tab:designconstraints} summarizes some hard and soft design constraints that will be used during the
+design process.
+\input{tables/summary_des.tex}
+
+\autoref{tab:additional_information} provides some values that have been chosen to solve the problem.
+\begin{table}[H]
+  \caption{Additional Information}
+  \label{tab:additional_information}
+  \centering
+  \begin{tabular}[H]{l c l}
+  \toprule[1pt]
+  \textbf{Parameter} & \textbf{Value} & \textbf{Units}  \\
+  \midrule
+  R                 &   287  &  [J/kg .K]  \\
+  $c_{p, \; turbine}$   &   1243.67 &  [J/kg .K]  \\
+  $\gamma_{turbine }$ & 1.30& [/]\\
+
+  
+  \midrule[1pt]
+  \end{tabular}
+\end{table}
+
+\clearpage

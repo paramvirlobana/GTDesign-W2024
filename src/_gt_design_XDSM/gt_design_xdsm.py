@@ -1,6 +1,6 @@
 # This file creates the XDSM diagram for the preliminary design phase that will be followed in the aero capstone class.
 
-from pyxdsm.XDSM import XDSM, OPT, SOLVER, FUNC, LEFT, RIGHT
+from pyxdsm.XDSM import XDSM, OPT, SOLVER, FUNC, LEFT, RIGHT, METAMODEL
 
 x = XDSM(use_sfmath=True)
 
@@ -11,40 +11,69 @@ freevortex = "blade_vortex_analysis"
 off_design = "off_design"
 aero_losses = "aerodynamic_losses"
 opt = "opt"
-sol = "solver"
+funcs = "funcs"
 
 ## ADD THE OPTIMIZER AND THE SOLVER
 x.add_system(opt, OPT, r"\text{Optimizer}")
-x.add_system(sol, SOLVER, r"\text{MDA}")
-
-
-
 
 ## ADD ALL THE SYSTEMS
-x.add_system(meanline, FUNC, (r"\text{Analysis - 1}",r"\text{Meanline Design}"))
-x.add_system(structural, FUNC, (r"\text{Analysis - 2}",r"\text{Structural Analysis}"))
-x.add_system(freevortex, FUNC, (r"\text{Analysis - 3}",r"\text{Blade Vortex Analysis}"))
-x.add_system(off_design, FUNC, (r"\text{Analysis - 4}",r"\text{Off Design}"))
-x.add_system(aero_losses, FUNC, (r"\text{Analysis - 5}",r"\text{Aerodynamic Losses}"))
+x.add_system(meanline, FUNC, (r"\text{1:}",r"\text{Meanline Design}"))
+x.add_system(structural, FUNC, (r"\text{2:}",r"\text{Structural Analysis}"))
+x.add_system(freevortex, FUNC, (r"\text{3:}",r"\text{Blade Vortex Analysis}"))
+x.add_system(off_design, FUNC, (r"\text{4:}",r"\text{Off Design}"))
+x.add_system(aero_losses, FUNC, (r"\text{5:}",r"\text{Aerodynamic Losses}"))
+x.add_system(funcs, METAMODEL, (r"\text{6:}",r"\text{Objective Function}"))
 
 ## ADD THE INPUTS FOR MEANLINE
-x.add_input(sol, (r"\Lambda, \psi", r"\alpha_3, M_{exit}"))
+x.add_input(opt, r"x^{(0)}")
 
 
-x.connect(aero_losses, opt, (r"\eta_0", r"\eta_{0_{off}}"))
-x.connect(meanline, structural, r"A_2, U")
-x.connect(structural, freevortex, r"r_t, r_h, r_m")
-x.connect(meanline, freevortex, (r"\phi_2, \phi_3, \alpha_2", r"U, C_{a_2}"))
+
+x.connect(opt, off_design, r"4: i_{des}")
+x.connect(opt, meanline, r"1: \psi, \alpha_3, M_3")
+x.connect(opt, structural, r"2: AN^2")
+
+
+x.connect(meanline, structural, r"2: y_2")
+x.connect(structural, freevortex, r"3: y_3")
+x.connect(meanline, freevortex, (r"3: y_2"))
+
+x.connect(opt, aero_losses, r"5: \zeta_{rotor}, y_1")
+x.connect(aero_losses, funcs, r"6: N_{rotor}, \zeta_{rotor}")
+x.connect(meanline, aero_losses, r"5: y_2")
+x.connect(off_design, aero_losses, r"5: y_5")
+
+
+#x.connect()
+x.connect(funcs, aero_losses, r"N_{rotor}")
+
+
+x.connect(meanline, opt, r"\eta_{design}")
+x.connect(meanline, funcs, r"\eta_{design}")
+
+x.connect(off_design, opt, r"\eta_{off-design}")
+x.connect(off_design, funcs, r"\eta_{off-design}")
+
+
+x.connect(off_design, opt, r"i_{des}")
+x.connect(structural, opt, r"AN^2")
+
+
+x.connect(freevortex, aero_losses, r"5: y_4")
+x.connect(structural, funcs, r"6: AN^2")
+x.connect(aero_losses, freevortex, r"K_{T_{off-design}}")
+x.connect(aero_losses, meanline, r"K_{T_{design}}")
+
+
+x.add_output(off_design, r"\eta_{off-design}^{\star}")
+x.add_output(meanline, r"\eta_{design}^{\star}")
+x.add_output(off_design, r"i_{des}^{\star}")
+x.add_output(structural, r"AN^2{\star}")
+
+x.connect(funcs, opt, (r"f"))
+
 
 # BACK TO THE MDA SOLVER
-x.connect(meanline, sol, (r"\phi_2, \phi_3, \beta_2, \alpha_2", r"A_2, A_3, C_1, C_2, C_3"))
-x.connect(structural, sol, (r"N, \omega, r_t", r"r_h, r_m, h"))
-x.connect(freevortex, sol, (r"\alpha_{2h}, \alpha_{2t}, \beta_{2h}, \beta_{2t}", r"\alpha_{3h}, \alpha_{3t}, \beta_{3h}, \beta_{3t}"))
-
-
-
-
-x.add_input(meanline, (r"\text{Cycle Calculations}", r"T_{01}, T_{02}, T_{03}", r"P_{01}, P_{03}"))
 x.add_output(opt, r"\text{Optimized Design *}", side=LEFT)
 
 
